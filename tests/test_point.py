@@ -13,7 +13,7 @@ class TestInBetween(unittest.TestCase):
     def test_inbetween_in_someline(self):
         self.assertTrue(Point(1.85,1.89).inBetween(Point(0,3),Point(5,0)))
     def test_inbetween_endpoint(self):
-        self.assertFalse(Point(0,3).inBetween(Point(0,3),Point(5,0)))
+        self.assertTrue(Point(0,3).inBetween(Point(0,3),Point(5,0)))
     def test_inbetween_vertical(self):
         self.assertTrue(Point(1,5.5).inBetween(Point(1,3),Point(1,7)))
     def test_inbetween_horizontal(self):
