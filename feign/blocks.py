@@ -42,43 +42,7 @@ def is_hex_color(input_string): #from https://stackoverflow.com/questions/428763
         return True
     return False
 
-#materials={
-#     '1': {'name': 'UO2',
-#           'density': 10.5,
-#           'path': '/dataFin/UO2.dat',
-#           'column': 1},
-#class MaterialOLD(object):
-#    '''Creates a new material object'''
-#    materials={}
-#    def __init__(self, name='',density=0,path=('',1),matID=None):
-#        '''Defines name, id, density and data path'''
-#        self.name = name
-#        self.density = density
-#        self.path = path
-#        self.matID = matID
-#        if matID in Material.materials:
-#            raise ValueError('Material "{}" already exists'.format(matID))
-#        elif matID is None:
-#            raise ValueError('matID has to be defined')
-#        else:
-#            Material.materials[matID]=self
-##        self.registry[matID] = self
 
-#If i wanted a special manager class...
-#class Materials(object):
-#    def __init__(self):
-#        self.dict = {}
-#    def addMaterial(self, material):
-#        self.lookup[material.matID] = material
-#        material.setDict(self.dict)
-#>>> class Item(object):
-#...     def __init__(self, name):
-#...             self.name = name
-#...     def setLookup(self, lookup):
-#...             self.lookup = lookup
-#...     def deleteSelf(self):
-#...             del self.lookup[self.name]
-#            
 class Material(object):
     '''Creates a new material object'''
     def __init__(self, matID=None):
@@ -139,32 +103,24 @@ class Materials(object):
     def __init__(self,materials=[]):
         if type(materials) is not list:
             raise ValueError('Materials() expects a list of materials')
-        elif len(materials)==0:
-            self.materials=materials
-            self._materialsdict={}
         elif False in [isinstance(m,Material) for m in materials]:
             raise ValueError('A material is not a Material() object')
         elif len([m.matID for m in materials])-len(set([m.matID for m in materials]))!=0:
             raise ValueError('Some materials have the same matID')
         else:
-            self.materials=materials
-            self._materialsdict={mat.matID: mat for mat in materials}
+            self.materials={mat.matID: mat for mat in materials}
         
 
     def __repr__(self):
         return "Materials() for collecting Material() objects"
         
-    @property
-    def materialsdict(self):
-        return self._materialsdict
     
     def add(self,material):
         if isinstance(material,Material):
             if material.matID in self._materialsdict:
                 raise ValueError('matID already present in the object')
             else:
-                self.materials.append(material)
-                self._materialsdict[material.matID]=material #TODO do I need to keep the list?
+                self.materials[material.matID]=material #TODO do I need to keep the list?
         else:
             raise ValueError('This is not a Material()')
 
@@ -206,32 +162,24 @@ class Pins(object):
     def __init__(self,pins=[]):
         if type(pins) is not list:
             raise ValueError('Pins() expects a list of pins')
-        elif len(pins)==0:
-            self.pins=pins
-            self._pinsdict={}
         elif False in [isinstance(p,Pin) for p in pins]:
             raise ValueError('A pin is not a Pin() object')
         elif len([p.pinID for p in pins])-len(set([p.pinID for p in pins]))!=0:
             raise ValueError('Some pins have the same pinID')
         else:
-            self.pins=pins
-            self._pinsdict={pin.pinID: pin for pin in pins}
+            self.pins={pin.pinID: pin for pin in pins}
         
 
     def __repr__(self):
         return "Pins() for collecting Pin() objects"
         
-    @property
-    def pinsdict(self):
-        return self._pinsdict
     
     def add(self,pin):
         if isinstance(pin,Pin):
             if pin.pinID in self._pinsdict:
                 raise ValueError('pinID already present in the object')
             else:
-                self.pins.append(pin)
-                self._pinsdict[pin.pinID]=pin
+                self.pins[pin.pinID]=pin
         else:
             raise ValueError('This is not a Pin()')
 
@@ -363,32 +311,24 @@ class Detectors(object):
     def __init__(self,detectors=[]):
         if type(detectors) is not list:
             raise ValueError('Detectors() expects a list of detectors')
-        elif len(detectors)==0:
-            self.detectors=detectors
-            self._detectorsdict={}
         elif False in [isinstance(p,Detector) for p in detectors]:
             raise ValueError('A detector is not a Detector() object')
         elif len([d.detID for d in detectors])-len(set([d.detID for d in detectors]))!=0:
             raise ValueError('Some detectors have the same detID')
         else:
-            self.detectors=detectors
-            self._detectorsdict={detector.detID: detector for detector in detectors}
+            self.detectors={detector.detID: detector for detector in detectors}
         
 
     def __repr__(self):
         return "Detectors() for collecting Detector() objects"
         
-    @property
-    def detectorsdict(self):
-        return self._detectorsdict
     
     def add(self,detector):
         if isinstance(detector,Detector):
             if detector.detectorID in self._detectorsdict:
                 raise ValueError('detectorID already present in the object')
             else:
-                self.detectors.append(detector)
-                self._detectorsdict[detector.detectorID]=detector
+                self.detectors[detector.detectorID]=detector
         else:
             raise ValueError('This is not a Detector()')
 
@@ -447,32 +387,24 @@ class Absorbers(object):
     def __init__(self,absorbers=[]):
         if type(absorbers) is not list:
             raise ValueError('Absorbers() expects a list of absorbers')
-        elif len(absorbers)==0:
-            self.absorbers=absorbers
-            self._absorbersdict={}
         elif False in [isinstance(p,Absorber) for p in absorbers]:
-            raise ValueError('A absorber is not a Absorber() object')
+            raise ValueError('One absorber is not a Absorber() object')
         elif len([a.absID for a in absorbers])-len(set([a.absID for a in absorbers]))!=0:
             raise ValueError('Some absorbers have the same detID')
         else:
-            self.absorbers=absorbers
-            self._absorbersdict={absorber.absID: absorber for absorber in absorbers}
+            self.absorbers={absorber.absID: absorber for absorber in absorbers}
         
 
     def __repr__(self):
         return "Absorbers() for collecting Absorber() objects"
         
-    @property
-    def absorbersdict(self):
-        return self._absorbersdict
     
     def add(self,absorber):
         if isinstance(absorber,Absorber):
             if absorber.absorberID in self._absorbersdict:
                 raise ValueError('absorberID already present in the object')
             else:
-                self.absorbers.append(absorber)
-                self._absorbersdict[absorber.absorberID]=absorber
+                self.absorbers[absorber.absorberID]=absorber
         else:
             raise ValueError('This is not a Absorber()')
 
@@ -580,13 +512,13 @@ class Experiment(object):
             raise ValueError('Output filename has to be str')
     
     def set_materials(self,materials):
-        self._materials=materials.materialsdict
+        self._materials=materials.materials
     
     def set_absorbers(self,absorbers):
-        self._absorbers=absorbers.absorbersdict #TODO
+        self._absorbers=absorbers.absorbers #TODO
         
     def set_detectors(self,detectors):
-        self._detectors=detectors.detectorsdict #TODO
+        self._detectors=detectors.detectors #TODO
         
     def set_assembly(self,assembly=None):
         #TODO check that assemblypool doesnt cut in 17*pitch
@@ -597,7 +529,7 @@ class Experiment(object):
                 raise ValueError('Assembly is not complete')
             else:
                 self._assembly=assembly
-                self._pins=assembly.pins.pinsdict
+                self._pins=assembly.pins.pins
         else:
             raise ValueError('Assembly has to be a Assembly object')
 
