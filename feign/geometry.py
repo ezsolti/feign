@@ -109,6 +109,7 @@ class Circle(object):
         return "Circle(C=(%.3f, %.3f),R=%.3f" % (self.c.x, self.c.y,self.r)
 
     def intersection(self,seg):
+        """for tangent it doesnt return anything"""
         if seg.slope==np.Inf:
             if seg.intercept>self.c.x-self.r and seg.intercept<self.c.x+self.r:
                 y1=np.sqrt(self.r**2-(seg.intercept-self.c.x)**2)+self.c.y
