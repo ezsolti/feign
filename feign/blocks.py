@@ -661,7 +661,7 @@ class Experiment(object):
                                         Dprev=0
                                         for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO if pins get into assembly, then look in that
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
-                                            D=distance(intersects[0],centerSource) 
+                                            D=Point.distance(intersects[0],centerSource) 
                                             dT[mat]=dT[mat]+(D-Dprev)
                                             Dprev=D
                                     else:
@@ -669,21 +669,21 @@ class Experiment(object):
                                         for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO if pins get into assembly, then look in that
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             if len(intersects)>1: #if len()==1, it is tangent, no distance traveled
-                                                D=distance(intersects[0],intersects[1])
+                                                D=Point.distance(intersects[0],intersects[1])
                                                 dT[mat]=dT[mat]+(D-Dprev)
                                                 Dprev=D                                        
                                             
                         ###Distance traveled outside the pool = distance of ray-pool intersect and detector
-                        dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
+                        dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+Point.distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
                         
                         ###Distance traveled in coolantMat = total source-detector distance - everything else
-                        dT[self.assembly.coolant]=dT[self.assembly.coolant]+distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
+                        dT[self.assembly.coolant]=dT[self.assembly.coolant]+Point.distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
                         
                         ###Distance traveled in absorbers
                         for absorber in self.absorbers.values():
                             intersects=absorber.rectangle.intersection(segmentSourceDetector)
                             if len(intersects)>1:
-                                dabs=distance(intersects[0],intersects[1])
+                                dabs=Point.distance(intersects[0],intersects[1])
                             else:
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
@@ -706,7 +706,7 @@ class Experiment(object):
                     contrib=1 #TODO might be a place to include a pre-known emission weight map
                     for key in self.materials.keys():
                         contrib=contrib*math.exp(-1*mue[key]*dTmap[key][i][j])
-                    contribmap[i][j]=contrib/(4*math.pi*(distance(center,detector.location))**2)
+                    contribmap[i][j]=contrib/(4*math.pi*(Point.distance(center,detector.location))**2)
         return contribmap
     
 #    def _checkData(self):
