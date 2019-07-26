@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-test Point
+test functions of Point()
+
+zs. elter 2019
 """
 
 import unittest
-from feign.geometry import *
+#from feign.geometry import *
 
 class TestInBetween(unittest.TestCase):
     def test_inbetween_in_45deg(self):
@@ -34,6 +36,35 @@ class TestIsEqual(unittest.TestCase):
         P=Point(3.445,5.232)
         Q=Point(3.445,6.232)
         self.assertFalse(P.isEqual(Q))
+        
+class TestRotate(unittest.TestCase):
+    def test_rotate1(self):
+        P=Point(3,4)
+        Q=P.rotate(90)
+        self.assertEqual(Q.x,-4.0)
+    def test_rotate2(self):
+        P=Point(3,4)
+        Q=P.rotate(-90)
+        self.assertEqual(Q.x,4.0)
+
+class TestTranslate(unittest.TestCase):
+    def test_translate(self):
+        P=Point(3,4)
+        Q=P.translate(6,2)
+        self.assertEqual(Q.x,9)
+        
+class TestDistance(unittest.TestCase):
+    def test_distance_horizontal(self):
+        self.assertEqual(Point.distance(Point(3,4),Point(3,7)),3)
+    def test_distance_vertical(self):
+        self.assertEqual(Point.distance(Point(3,4),Point(2,4)),1)
+    def test_distance_1(self):
+        self.assertEqual(Point.distance(Point(3,4),Point(5,6)),np.sqrt(8))
+    def test_distance_2(self):
+        self.assertEqual(Point(3,4).distance(Point(5,6)),np.sqrt(8))
+    def test_distance_to_self(self):
+        self.assertEqual(Point(3,4).distance(Point(3,4)),0)
+    
 
 
 if __name__ == '__main__':
