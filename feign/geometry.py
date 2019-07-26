@@ -9,25 +9,41 @@ class Point(object):
     '''Creates a point on a coordinate plane with values x and y.'''
 
     def __init__(self, X, Y):
-        '''Defines x and y variables'''
+        '''Defines a Point with x and y coordinates'''
         self.x = X
         self.y = Y
 
     def __repr__(self):
         return "Point(%.3f, %.3f)" % (self.x, self.y)
 
-#    def distance(self, other):
-#        dx = self.x - other.x
-#        dy = self.y - other.y
-#        return math.sqrt(dx**2 + dy**2)
+    def distance(oth, other):
+        dx = oth.x - other.x
+        dy = oth.y - other.y
+        return math.sqrt(dx*dx + dy*dy)
         
     def inBetween(self,p1,p2):
-        """function returns True if point self is between points p1 and p2,
-        False otherwise. p1,p2 are Point objects.
-        The function expects that the three points lie on
-        the same line. However the function works even if that is not the case."""
-        #TODO dont check with distance, time consuming
-        return distance(p1,p2)>=distance(self,p1) and distance(p1,p2)>=distance(self,p2)
+        """The function evaluates whether a point is on the same line and
+        in between two other points. If the point is equal to any of the other
+        points, the function returns False.
+        """
+        dxc = self.x - p1.x;
+        dyc = self.y - p1.y
+        dxl = p2.x - p1.x
+        dyl = p2.y - p1.y
+        
+        if abs(dxc*dyl-dyc*dxl)<=0.00001:
+            if abs(dxl)>=abs(dyl):
+                if dxl>0:
+                    return p1.x <= self.x and self.x <= p2.x
+                else:
+                    return p2.x <= self.x and self.x <= p1.x
+            else:
+                if dyl>0:
+                    return p1.y <= self.y and self.y <= p2.y
+                else:
+                    return p2.y <= self.y and self.y <= p1.y
+        else:
+            return False
         
     def isEqual(self, other):
         if abs(self.x-other.x)<0.00001 and abs(self.y-other.y)< 0.00001:
@@ -43,12 +59,6 @@ class Point(object):
         
     def translate(self,xt,yt):
         return Point(self.x+xt,self.y+yt)
-
-#TODO put back distance to Point(), and import Point.distance as distance
-def distance(P, Q):
-        dx = P.x - Q.x
-        dy = P.y - Q.y
-        return math.sqrt(dx**2 + dy**2)
 
 class Segment(object):
     def __init__(self,P,Q):
@@ -91,7 +101,7 @@ class Segment(object):
 
 class Circle(object):
     def __init__(self, C, R):
-        '''Defines center and y variables'''
+        '''Define center as Point() and radius variables'''
         self.c = C
         self.r = R
 
@@ -142,17 +152,21 @@ class Rectangle(object):
         self.p2=P2
         self.p3=P3
         self.p4=P4
-        self.p1p2=Segment(P1,P2)
-        self.p2p3=Segment(P2,P3)
-        self.p3p4=Segment(P3,P4)
-        self.p4p1=Segment(P4,P1)
+        if Segment(P1,P3).intersection(Segment(P2,P4)) == []:
+            raise ValueError('Corners defined in wrong order')
+        else:
+            self.p1p2=Segment(P1,P2)
+            self.p2p3=Segment(P2,P3)
+            self.p3p4=Segment(P3,P4)
+            self.p4p1=Segment(P4,P1)
         
     def __repr__(self):
         return "Rectangle(Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f))" % (self.p1.x, self.p1.y, self.p2.x, self.p2.y, self.p3.x, self.p3.y, self.p4.x, self.p4.y)
     def encloses_point(self,P):
-        #implement Heron's formula
-        #if triangle side lengths are a,b,c, then s=0.5*(a+b+c)
-        #area is then sqrt(s(s-a)(s-b)(s-c))
+        """implement Heron's formula
+        if triangle side lengths are a,b,c, then s=0.5*(a+b+c)
+        area is then sqrt(s(s-a)(s-b)(s-c))
+        """
         a12=distance(self.p1,P)
         b12=distance(self.p2,P)
         c12=distance(self.p1,self.p2)
@@ -236,8 +250,8 @@ class Rectangle(object):
                 inters.append(inter41[0])
         
         if len(inters)>2:
-            print('seems to be an error, more than two intersections --> concave')
-            return 0
+            raise ValueError('seems to be an error, more than two intersections --> concave')
+            #this should not happen, since in Rectangle() I check for concave case
         else:
             return inters
             

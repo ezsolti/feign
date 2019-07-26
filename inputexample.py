@@ -165,7 +165,7 @@ elines=['0.4971',
 pwrClab=Experiment()
 pwrClab.set_assembly(pwrOrig)
 pwrClab.set_elines(elines)
-pwrClab.set_output('testOOP.dat')
+pwrClab.set_output('testOOP2.dat')
 pwrClab.set_detectors(detectors)
 pwrClab.set_absorbers(absorbers)
 pwrClab.set_materials(materials)
