@@ -7,7 +7,7 @@ zs. elter 2019
 """
 
 import unittest
-#from feign.geometry import *
+from feign.geometry import *
 
 class TestSegmentAttributes(unittest.TestCase):
     def test_segment_slope_horizontal(self):

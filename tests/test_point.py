@@ -7,7 +7,7 @@ zs. elter 2019
 """
 
 import unittest
-#from feign.geometry import *
+from feign.geometry import *
 
 class TestInBetween(unittest.TestCase):
     def test_inbetween_in_45deg(self):
@@ -63,7 +63,7 @@ class TestDistance(unittest.TestCase):
     def test_distance_2(self):
         self.assertEqual(Point(3,4).distance(Point(5,6)),np.sqrt(8))
     def test_distance_to_self(self):
-        self.assertEqual(Point(3,4).distance(Point(3,4)),0)
+        self.assertAlmostEqual(Point(3,4).distance(Point(3,4)),0,delta=0.000001)
     
 
 
