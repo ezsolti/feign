@@ -5,7 +5,16 @@ zs. elter 2019
 """
 
 import unittest
-#from feign.geometry import *
+from feign.geometry import *
+
+class TestRectangleDefinition(unittest.TestCase):
+    def test_rectangle_wrong_corner_order(self):
+        with self.assertRaises(ValueError):
+            rect=Rectangle(Point(3,7),Point(13,5),Point(5,3),Point(12,6))
+    def test_rectangle_concave_shape(self):
+        with self.assertRaises(ValueError):
+            rect=Rectangle(Point(5,3),Point(13,5),Point(10,7),Point(10,10))
+
 
 class TestEnclosesPoint(unittest.TestCase):
     def test_encloses_point_yes(self):
