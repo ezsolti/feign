@@ -7,7 +7,39 @@ zs. elter 2019
 """
 
 import unittest
-from feign.geometry import *
+#from feign.geometry import *
+
+class TestSegmentAttributes(unittest.TestCase):
+    def test_segment_slope_horizontal(self):
+        P=Point(-1,5)
+        Q=Point(3,5)
+        s=Segment(P,Q)
+        self.assertAlmostEqual(s.slope,0.0,delta=0.00001)
+    def test_segment_slope_vertical(self):
+        P=Point(5,-1)
+        Q=Point(5,3)
+        s=Segment(P,Q)
+        self.assertEqual(s.slope,np.Inf)
+    def test_segment_slope_any(self):
+        P=Point(1,1)
+        Q=Point(3,3)
+        s=Segment(P,Q)
+        self.assertAlmostEqual(s.slope,1.0,delta=0.00001)
+    def test_segment_intercept_horizontal(self):
+        P=Point(-1,5)
+        Q=Point(3,5)
+        s=Segment(P,Q)
+        self.assertAlmostEqual(s.intercept,5.0,delta=0.00001)
+    def test_segment_intercept_vertical(self):
+        P=Point(5,-1)
+        Q=Point(5,3)
+        s=Segment(P,Q)
+        self.assertAlmostEqual(s.intercept,5.0,delta=0.00001)
+    def test_segment_intercept_any(self):
+        P=Point(1,2)
+        Q=Point(3,4)
+        s=Segment(P,Q)
+        self.assertAlmostEqual(s.intercept,1.0,delta=0.00001)
 
 class TestSegmentIntersection(unittest.TestCase):
     def test_intersection_parallel(self):
