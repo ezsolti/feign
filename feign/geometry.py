@@ -26,22 +26,23 @@ class Point(object):
         in between two other points. If the point is equal to any of the other
         points, the function returns False.
         """
-        dxc = self.x - p1.x;
+        dxc = self.x - p1.x
         dyc = self.y - p1.y
         dxl = p2.x - p1.x
         dyl = p2.y - p1.y
         
         if abs(dxc*dyl-dyc*dxl)<=0.00001:
-            if abs(dxl)>=abs(dyl):
+            if abs(dxl)>=abs(dyl): 
                 if dxl>0:
-                    return p1.x <= self.x and self.x <= p2.x
+#                    return p1.x <= self.x and self.x <= p2.x
+                    return p1.x-self.x <= 0.00001 and self.x-p2.x <= 0.00001
                 else:
-                    return p2.x <= self.x and self.x <= p1.x
+                    return p2.x-self.x <= 0.00001 and self.x-p1.x <= 0.00001
             else:
                 if dyl>0:
-                    return p1.y <= self.y and self.y <= p2.y
+                    return p1.y-self.y <= 0.00001 and self.y-p2.y <= 0.00001
                 else:
-                    return p2.y <= self.y and self.y <= p1.y
+                    return p2.y-self.y <= 0.00001 and self.y-p1.y <= 0.00001
         else:
             return False
         
@@ -122,6 +123,9 @@ class Circle(object):
                 if inter2.inBetween(seg.p,seg.q):
                     inter.append(inter2)
                 return inter
+#TODO tangent returns
+#            elif seg.intercept=self.c.x-self.r or seg.intercept=self.c.x+self.r: #FLOAT COMPARE!!!
+#                return Point(seg.intercept,self.c.y) #vertical line can only touch it at y=c.y
             else:
                 return []
         else:
@@ -132,6 +136,9 @@ class Circle(object):
             if D < 0:
                 return []
             elif D == 0:
+                #x1=-B/(2*A)
+                #y1=y1 = seg.intercept + seg.slope*x1
+                #return [Point(x1,y1)]
                 return []
             else:
                 x1 = (-B+math.sqrt(B**2-4*A*C))/(2*A)
@@ -163,6 +170,7 @@ class Rectangle(object):
         
     def __repr__(self):
         return "Rectangle(Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f))" % (self.p1.x, self.p1.y, self.p2.x, self.p2.y, self.p3.x, self.p3.y, self.p4.x, self.p4.y)
+                
     def encloses_point(self,P):
         """implement Heron's formula
         if triangle side lengths are a,b,c, then s=0.5*(a+b+c)
