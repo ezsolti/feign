@@ -44,7 +44,7 @@ alu=Material('9')
 alu.set_density(2.7)
 alu.set_path(('/dataFin/Al.dat',1))
 
-materials=Materials([uo2,he,zr,h2o,ss,air,lead,copper,alu])
+materials=Materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
 ###Pins
 
 fuel=Pin('1')
@@ -123,7 +123,7 @@ F5steel21mm.set_rectangle(Rectangle(Point(145.593, 202.162),Point(202.162, 145.5
 F5steel21mm.set_material('5')
 F5steel21mm.set_accommat('6')
 
-detectors=Detectors([F5,F15])
+detectors=Detectors(F5,F15)
 absorbers=Absorbers([F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm])
                 
 elines=['0.4971',
@@ -165,11 +165,16 @@ elines=['0.4971',
 pwrClab=Experiment()
 pwrClab.set_assembly(pwrOrig)
 pwrClab.set_elines(elines)
-pwrClab.set_output('testOOP3.dat')
+pwrClab.set_output('testOOP6.dat')
 pwrClab.set_detectors(detectors)
 pwrClab.set_absorbers(absorbers)
 pwrClab.set_materials(materials)
+start = time.time()
+#for _ in range(10):
 pwrClab.Run()
+#end = time.time()
+#print(end - start)
+
 plt.figure()
 plt.plot(pwrClab.elines,pwrClab._geomEff)
 plt.show()
