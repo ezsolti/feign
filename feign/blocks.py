@@ -98,17 +98,25 @@ class Material(object):
         else:
             raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self.matID)))
             
-
 class Materials(object):
-    def __init__(self,materials=[]):
-        if type(materials) is not list:
-            raise ValueError('Materials() expects a list of materials')
-        elif False in [isinstance(m,Material) for m in materials]:
-            raise ValueError('A material is not a Material() object')
-        elif len([m.matID for m in materials])-len(set([m.matID for m in materials]))!=0:
-            raise ValueError('Some materials have the same matID')
-        else:
-            self.materials={mat.matID: mat for mat in materials}
+    def __init__(self,*argv):
+        """Define a Materials() object, which is a storage of Material() objects.
+        Input: Material() objects
+        Attribute: Materials().materials, a dictionary storing the Material() objects.
+        >>> uox=Material('1')
+        >>> zr=Material('2')
+        >>> materials=Materials(uox,zr)
+        >>> materials.materials
+        {'1': Material(matID=1), '2': Material(matID=2)}
+        """
+        self.materials={}
+        for arg in argv:
+            if  not isinstance(arg,Material):
+                raise ValueError('Inputs need to be Material() objects')
+            elif arg.matID in self.materials:
+                raise ValueError('matID {} is duplicated'.format(arg.matID))
+            else:
+                self.materials[arg.matID]=arg
         
 
     def __repr__(self):
@@ -116,22 +124,50 @@ class Materials(object):
         
     
     def add(self,material):
+        """Function to add a Material() object to a Materials() object.
+        Input: Materials() and Material() object
+        >>> uox=Material('1')
+        >>> zr=Material('2')
+        >>> materials=Materials()
+        >>> materials.materials
+        {}
+        >>> materials.add(uox)
+        >>> materials.add(zr)
+        >>> materials.materials
+        {'1': Material(matID=1), '2': Material(matID=2)}
+        """
         if isinstance(material,Material):
-            if material.matID in self._materialsdict:
+            if material.matID in self.materials:
                 raise ValueError('matID already present in the object')
             else:
-                self.materials[material.matID]=material #TODO do I need to keep the list?
+                self.materials[material.matID]=material
         else:
             raise ValueError('This is not a Material()')
-
-    def remove(self,material): #TODO, wrong
+    
+    def remove(self,material):
+        """Function to remove a Material() object from a Materials() object.
+        Input: Materials() and Material() object
+        Only previously added Material() objects can be removed
+        >>> uox=Material('1')
+        >>> zr=Material('2')
+        >>> materials=Materials([fuel,clad])
+        >>> materials.materials
+        {'1': Material(matID=1), '2': Material(matID=2)}
+        >>> materials.remove(zr)
+        >>> materials.materials
+        {'1': Material(matID=1)}
+        >>> materials.remove(zr)
+        You can remove only existing Material()
+        >>> a=Point(3,4)
+        >>> materials.remove(a)
+        You can remove only Material()
+        """
         try:
-            del self.materialsdict[material.matID]
+            del self.materials[material.matID]
         except AttributeError:
             print('You can remove only Material()')
         except KeyError:
             print('You can remove only existing Material()')
-        
         
 class Pin(object):
     """creates a new cell"""
@@ -143,6 +179,8 @@ class Pin(object):
         if pinID is None or type(pinID) is not str:
             raise ValueError('pinID has to be defined')
         
+    def __repr__(self):
+        return "Pin(pinID=%s)" % (self.pinID)
     
     @property
     def regions(self):
@@ -286,6 +324,9 @@ class Detector(object):
         self._collimator=None
         if detID is None:
             raise ValueError('detID has to be defined')
+            
+    def __repr__(self):
+        return "Detector(detID=%s)" % (self.detID)
         
     @property
     def location(self):
@@ -308,15 +349,24 @@ class Detector(object):
             raise ValueError('Detector location has to be Point object')
 
 class Detectors(object):
-    def __init__(self,detectors=[]):
-        if type(detectors) is not list:
-            raise ValueError('Detectors() expects a list of detectors')
-        elif False in [isinstance(p,Detector) for p in detectors]:
-            raise ValueError('A detector is not a Detector() object')
-        elif len([d.detID for d in detectors])-len(set([d.detID for d in detectors]))!=0:
-            raise ValueError('Some detectors have the same detID')
-        else:
-            self.detectors={detector.detID: detector for detector in detectors}
+    def __init__(self,*argv):
+        """Define a Detectors() object, which is a storage of Detector() objects.
+        Input: Detector() objects
+        Attribute: Detectors().detectors, a dictionary storing the Detector() objects.
+        >>> F5=Detector('F5')
+        >>> F15=Detector('F15')
+        >>> detectors=Detectors(F5,F15)
+        >>> detectors.detectors
+        {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
+        """
+        self.detectors={}
+        for arg in argv:
+            if  not isinstance(arg,Detector):
+                raise ValueError('Inputs need to be Detector() objects')
+            elif arg.detID in self.detectors:
+                raise ValueError('detID {} is duplicated'.format(arg.detID))
+            else:
+                self.detectors[arg.detID]=arg
         
 
     def __repr__(self):
@@ -324,17 +374,46 @@ class Detectors(object):
         
     
     def add(self,detector):
+        """Function to add a Detector() object to a Detectors() object.
+        Input: Detectors() and Detector() object
+        >>> F5=Detector('F5')
+        >>> F15=Detector('F15')
+        >>> detectors=Detectors([])
+        >>> detectors.detectors
+        {}
+        >>> detectors.add(F5)
+        >>> detectors.add(F15)
+        >>> detectors.detectors
+        {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
+        """
         if isinstance(detector,Detector):
-            if detector.detectorID in self._detectorsdict:
-                raise ValueError('detectorID already present in the object')
+            if detector.detID in self.detectors:
+                raise ValueError('detID already present in the object')
             else:
-                self.detectors[detector.detectorID]=detector
+                self.detectors[detector.detID]=detector
         else:
             raise ValueError('This is not a Detector()')
-
-    def remove(self,detector): #TODO, wrong
+    
+    def remove(self,detector):
+        """Function to remove a Detector() object from a Detectors() object.
+        Input: Detectors() and Detector() object
+        Only previously added Detector() objects can be removed
+        >>> F5=Detector('F5')
+        >>> F15=Detector('F15')
+        >>> detectors=Detectors(F5,F15)
+        >>> detectors.detectors
+        {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
+        >>> detectors.remove(F15)
+        >>> detectors.detectors
+        {'F5': Detector(detID=F5)}
+        >>> detectors.remove(F15)
+        You can remove only existing Detector()
+        >>> a=Point(3,4)
+        >>> detectors.remove(a)
+        You can remove only Detector()
+        """
         try:
-            del self.detectorsdict[detector.detectorID]
+            del self.detectors[detector.detID]
         except AttributeError:
             print('You can remove only Detector()')
         except KeyError:
@@ -349,7 +428,9 @@ class Absorber(object): #TODO: absorber sets might be attributed to Detectors
         if absID is None:
             raise ValueError('absID has to be defined')
         
-            
+    def __repr__(self):
+        return "Absorber(absID=%s)" % (self.absID)
+        
     @property
     def rectangle(self):
         return self._rectangle
@@ -533,6 +614,7 @@ class Experiment(object):
         else:
             raise ValueError('Assembly has to be a Assembly object')
 
+# TODO just check that for corner in pool if pooldummy.encloses_point(corner) raise Baj van
 #        TODO: check that pool is not inside assembly. the stuff below just checks that they dont cross eachother       
 #        pooldummy=Rectangle(Point(assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2),
 #                            Point(assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
@@ -616,11 +698,11 @@ class Experiment(object):
                             intersects=absorber.rectangle.intersection(segmentSourceDetector)
                             if len(intersects)>1:
                                 dabs=Point.distance(intersects[0],intersects[1])
-                            else:
+                            else: #TODO if detector or source is within absorber?? elif absorber.rectangle.encloses_point(detector)
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
                             dT[absorber.accommat]=dT[absorber.accommat]-dabs
-                        
+                        #TODO CIRCLE ABSORBER?? rectangle change to "shape" or maybe something similar to avoid np.array().shape confusion. form?, and has the same intersection()
                         #Update the map
                         for key in dT:
                             dTmap[key][i][j]=dT[key]
