@@ -274,7 +274,6 @@ class Assembly(object):
         self._pitch=None
         self._pins=None
         self._fuelmap=None
-        #self._materials
         self._coolant=None
         self._surrounding=None
         self._source=None
@@ -289,7 +288,7 @@ class Assembly(object):
         return self._pool
     
     @property
-    def pins(self):   #TODO now this is both in experiment and here
+    def pins(self):   
         return self._pins
     
     @property
@@ -343,11 +342,14 @@ class Assembly(object):
 #        else: 
         self._surrounding=surrounding
             
-    def set_source(self, source=None):
-        if source not in Material.materials:
-            raise ValueError('Source material not defined')
-        else: 
-            self._source=source
+    def set_source(self, *args):
+#        if source not in Material.materials:
+#            raise ValueError('Source material not defined')
+#        else: 
+        self._source=[]
+        for arg in args:
+            if isinstance(arg,Material):
+                self._source.append(arg.matID)
             
     def set_pool(self,pool=None):
         if isinstance(pool,Rectangle):
@@ -722,31 +724,39 @@ class Experiment(object):
         
         
     def set_assembly(self,assembly=None):
-        #TODO check that assemblypool doesnt cut in 17*pitch
+    
         if isinstance(assembly,Assembly):
             if assembly.pins is None or assembly.pitch is None or \
             assembly.coolant is None or assembly.fuelmap is None or \
-            assembly.pool is None or assembly.surrounding is None or assembly.source is None:
+            assembly.source is None:
                 raise ValueError('Assembly is not complete')
+            elif assembly.pool is None:
+                print('No pool in the problem, the surrounding of the Assembly is filled with coolant material')
+                self._assembly=assembly
+                self._pins=assembly.pins.pins
+            elif assembly.surrounding is None:
+                raise ValueError('Surrounding material has to be defined if pool is defined') 
             else:
                 self._assembly=assembly
                 self._pins=assembly.pins.pins
         else:
-            raise ValueError('Assembly has to be a Assembly object')
+            raise ValueError('Assembly has to be an Assembly() object')
 
-# TODO just check that for corner in pool if pooldummy.encloses_point(corner) raise Baj van
-#        TODO: check that pool is not inside assembly. the stuff below just checks that they dont cross eachother       
-#        pooldummy=Rectangle(Point(assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2),
-#                            Point(assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
-#                            Point(-assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
-#                            Point(-assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2))
-#        print(pooldummy)
-#        print(assembly.pool)
-#        if len(pooldummy.intersection(assembly.pool.p1p2))>1 or \
-#           len(pooldummy.intersection(assembly.pool.p2p3))>1 or \
-#           len(pooldummy.intersection(assembly.pool.p3p4))>1 or \
-#           len(pooldummy.intersection(assembly.pool.p4p1))>1:
-#            raise ValueError('Assembly does not fit in pool')
+        #Check that the pool is around the fuel assembly
+        pooldummy=Rectangle(Point(assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2),
+                            Point(assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
+                            Point(-assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
+                            Point(-assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2))
+        
+        for corner in [assembly.pool.p1,assembly.pool.p2,assembly.pool.p3,assembly.pool.p4]:
+            if pooldummy.encloses_point(corner):
+                raise ValueError('Pool is inside the fuel')
+        
+        if len(pooldummy.intersection(assembly.pool.p1p2))>1 or \
+           len(pooldummy.intersection(assembly.pool.p2p3))>1 or \
+           len(pooldummy.intersection(assembly.pool.p3p4))>1 or \
+           len(pooldummy.intersection(assembly.pool.p4p1))>1:
+            raise ValueError('Assembly does not fit in pool')
             
     def set_elines(self,elines=None):
         if (type(elines) is list) and (False not in [type(e) is str for e in elines]) and (False not in [isFloat(e) for e in elines]):
@@ -775,7 +785,8 @@ class Experiment(object):
         M=self.assembly.M
         for i in range(N):
             for j in range(M):
-                if self.assembly.fuelmap[i][j] in self.assembly.source: #TODO maybe a source material should be?
+                sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
+                if True in sourceIn: #TODO maybe a source material should be?
                     dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
                     
                     centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
@@ -836,8 +847,9 @@ class Experiment(object):
         for i in range(self.assembly.N):
             for j in range(self.assembly.M):
                 center=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
-                if self.assembly.fuelmap[i][j] in self.assembly.source:
-                    contrib=1 #TODO might be a place to include a pre-known emission weight map
+                sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
+                if True in sourceIn:
+                    contrib=1 #TODO might be a place to include a pre-known emission weight map. Or to provide a function which multiplies the contribution with some weight matrix
                     for key in self.materials.keys():
                         contrib=contrib*math.exp(-1*mue[key]*dTmap[key][i][j])
                     contribmap[i][j]=contrib/(4*math.pi*(Point.distance(center,detector.location))**2)
@@ -925,11 +937,12 @@ class Experiment(object):
                 sourceNorm=0
                 for i in range(self.assembly.N):
                     for j in range(self.assembly.M):
-                        if self.assembly.fuelmap[i][j] in self.assembly.source:
+                        sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
+                        if True in sourceIn:
                             counts=counts+contributionMapAve[e][i][j]
                             sourceNorm=sourceNorm+1
                 counts=counts/sourceNorm #TODO do i actually wanna normalize with the number of pins?
-                geomefficiency.append(counts)
+                geomefficiency.append(counts) #TODO calc_geomEff(contribMapAve)???
     
             self._contributionMap=contributionMapAve
             self._geomEff=geomefficiency
