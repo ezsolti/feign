@@ -59,7 +59,7 @@ rodguide=Pin('3')
 rodguide.add_region((0.42,'4'))
 rodguide.add_region((0.48,'3'))
 
-pins=Pins([fuel,rodguide])
+pins=Pins(fuel,rodguide)
 ###Assembly
 
 pwrOrig=Assembly(17,17)
@@ -124,7 +124,7 @@ F5steel21mm.set_material('5')
 F5steel21mm.set_accommat('6')
 
 detectors=Detectors(F5,F15)
-absorbers=Absorbers([F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm])
+absorbers=Absorbers(F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm)
                 
 elines=['0.4971',
  '0.563',

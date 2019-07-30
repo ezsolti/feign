@@ -197,15 +197,24 @@ class Pin(object):
             self._materials.append(region[1])
 
 class Pins(object):
-    def __init__(self,pins=[]):
-        if type(pins) is not list:
-            raise ValueError('Pins() expects a list of pins')
-        elif False in [isinstance(p,Pin) for p in pins]:
-            raise ValueError('A pin is not a Pin() object')
-        elif len([p.pinID for p in pins])-len(set([p.pinID for p in pins]))!=0:
-            raise ValueError('Some pins have the same pinID')
-        else:
-            self.pins={pin.pinID: pin for pin in pins}
+    def __init__(self,*argv):
+        """Define a Pins() object, which is a storage of Pin() objects.
+        Input: Pin() objects
+        Attribute: Pins().pins, a dictionary storing the Pin() objects.
+        >>> fuel=Pin('1')
+        >>> guide=Pin('2')
+        >>> pins=Pins(fuel,guide)
+        >>> pins.pins
+        {'1': Pin(pinID=1), '2': Pin(pinID=2)}
+        """
+        self.pins={}
+        for arg in argv:
+            if  not isinstance(arg,Pin):
+                raise ValueError('Inputs need to be Pin() objects')
+            elif arg.pinID in self.pins:
+                raise ValueError('pinID {} is duplicated'.format(arg.pinID))
+            else:
+                self.pins[arg.pinID]=arg
         
 
     def __repr__(self):
@@ -213,17 +222,46 @@ class Pins(object):
         
     
     def add(self,pin):
+        """Function to add a Pin() object to a Pins() object.
+        Input: Pins() and Pin() object
+        >>> fuel=Pin('1')
+        >>> guide=Pin('2')
+        >>> pins=Pins()
+        >>> pins.pins
+        {}
+        >>> pins.add(fuel)
+        >>> pins.add(guide)
+        >>> pins.pins
+        {'1': Pin(pinID=1), '2': Pin(pinID=2)}
+        """
         if isinstance(pin,Pin):
-            if pin.pinID in self._pinsdict:
+            if pin.pinID in self.pins:
                 raise ValueError('pinID already present in the object')
             else:
                 self.pins[pin.pinID]=pin
         else:
             raise ValueError('This is not a Pin()')
-
-    def remove(self,pin): #TODO, wrong
+    
+    def remove(self,pin):
+        """Function to remove a Pin() object from a Pins() object.
+        Input: Pins() and Pin() object
+        Only previously added Pin() objects can be removed
+        >>> fuel=Pin('1')
+        >>> guide=Pin('2')
+        >>> pins=Pins(fuel,guide)
+        >>> pins.pins
+        {'1': Pin(pinID=1), '2': Pin(pinID=2)}
+        >>> pins.remove(guide)
+        >>> pins.pins
+        {'1': Pin(pinID=1)}
+        >>> pins.remove(guide)
+        You can remove only existing Pin()
+        >>> a=Point(3,4)
+        >>> pins.remove(a)
+        You can remove only Pin()
+        """
         try:
-            del self.pinsdict[pin.pinID]
+            del self.pins[pin.pinID]
         except AttributeError:
             print('You can remove only Pin()')
         except KeyError:
@@ -378,7 +416,7 @@ class Detectors(object):
         Input: Detectors() and Detector() object
         >>> F5=Detector('F5')
         >>> F15=Detector('F15')
-        >>> detectors=Detectors([])
+        >>> detectors=Detectors()
         >>> detectors.detectors
         {}
         >>> detectors.add(F5)
@@ -422,7 +460,7 @@ class Detectors(object):
 class Absorber(object): #TODO: absorber sets might be attributed to Detectors
     def __init__(self,absID=None):
         self.absID=absID
-        self._rectangle=None
+        self._rectangle=None  #TODO: .form to accommodate circle
         self._material=None
         self._accommat=None
         if absID is None:
@@ -465,15 +503,24 @@ class Absorber(object): #TODO: absorber sets might be attributed to Detectors
     #TODO: a way to check whether no place is duplicated
     
 class Absorbers(object):
-    def __init__(self,absorbers=[]):
-        if type(absorbers) is not list:
-            raise ValueError('Absorbers() expects a list of absorbers')
-        elif False in [isinstance(p,Absorber) for p in absorbers]:
-            raise ValueError('One absorber is not a Absorber() object')
-        elif len([a.absID for a in absorbers])-len(set([a.absID for a in absorbers]))!=0:
-            raise ValueError('Some absorbers have the same detID')
-        else:
-            self.absorbers={absorber.absID: absorber for absorber in absorbers}
+    def __init__(self,*argv):
+        """Define a Absorbers() object, which is a storage of Absorber() objects.
+        Input: Absorber() objects
+        Attribute: Absorbers().absorbers, a dictionary storing the Absorber() objects.
+        >>> leadsheet=Absorber('leadsheet')
+        >>> alusheet=Absorber('alusheet')
+        >>> absorbers=Absorbers(leadsheet,alusheet)
+        >>> absorbers.absorbers
+        {'leadsheet': Absorber(absID=leadsheet), 'alusheet': Absorber(absID=alusheet)}
+        """
+        self.absorbers={}
+        for arg in argv:
+            if  not isinstance(arg,Absorber):
+                raise ValueError('Inputs need to be Absorber() objects')
+            elif arg.absID in self.absorbers:
+                raise ValueError('absID {} is duplicated'.format(arg.absID))
+            else:
+                self.absorbers[arg.absID]=arg
         
 
     def __repr__(self):
@@ -481,17 +528,46 @@ class Absorbers(object):
         
     
     def add(self,absorber):
+        """Function to add an Absorber() object to an Absorbers() object.
+        Input: Absorbers() and Absorber() object
+        >>> leadsheet=Absorber('leadsheet')
+        >>> alusheet=Absorber('alusheet')
+        >>> absorbers=Absorbers()
+        >>> absorbers.absorbers
+        {}
+        >>> absorbers.add(leadsheet)
+        >>> absorbers.add(alusheet)
+        >>> absorbers.absorbers
+        {'leadsheet': Absorber(absID=leadsheet), 'alusheet': Absorber(absID=alusheet)}
+        """
         if isinstance(absorber,Absorber):
-            if absorber.absorberID in self._absorbersdict:
-                raise ValueError('absorberID already present in the object')
+            if absorber.absID in self.absorbers:
+                raise ValueError('absID already present in the object')
             else:
-                self.absorbers[absorber.absorberID]=absorber
+                self.absorbers[absorber.absID]=absorber
         else:
-            raise ValueError('This is not a Absorber()')
-
-    def remove(self,absorber): #TODO, wrong
+            raise ValueError('This is not an Absorber()')
+    
+    def remove(self,absorber):
+        """Function to remove an Absorber() object from an Absorbers() object.
+        Input: Absorbers() and Absorber() object
+        Only previously added Absorber() objects can be removed
+        >>> leadsheet=Absorber('leadsheet')
+        >>> alusheet=Absorber('alusheet')
+        >>> absorbers=Absorbers(leadsheet,alusheet)
+        >>> absorbers.absorbers
+        {'leadsheet': Absorber(absID=leadsheet), 'alusheet': Absorber(absID=alusheet)}
+        >>> absorbers.remove(alusheet)
+        >>> absorbers.absorbers
+        {'leadsheet': Absorber(absID=leadsheet)}
+        >>> absorbers.remove(alusheet)
+        You can remove only existing Absorber()
+        >>> a=Point(3,4)
+        >>> absorbers.remove(a)
+        You can remove only Absorber()
+        """
         try:
-            del self.absorbersdict[absorber.absorberID]
+            del self.absorbers[absorber.absID]
         except AttributeError:
             print('You can remove only Absorber()')
         except KeyError:
