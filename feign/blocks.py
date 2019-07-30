@@ -313,7 +313,7 @@ class Assembly(object):
         if isFloat(pitch):
             self._pitch=pitch
         else:
-            raise ValueError('Pitch has to be float')
+            raise TypeError('Pitch has to be float')
             
     def set_pins(self,pins):
         if isinstance(pins,Pins):
@@ -611,10 +611,10 @@ class Experiment(object):
     def __init__(self):
         self._output=None
         self._assembly=None
-        self._pins=None#Pin.pins
-        self._materials=None#Material.materials
-        self._detectors=None#Detector.detectors #TODO make "plural" classes
-        self._absorbers=None#Absorber.absorbers
+        self._pins=None
+        self._materials=None
+        self._detectors=None
+        self._absorbers=None
         self._elines=None
         self._mu=None
         self._dTmap=None
@@ -649,11 +649,10 @@ class Experiment(object):
     def absorbers(self):
         return self._absorbers
 
-    
     @property
     def elines(self):
         return np.array(self._elines).astype(float) #TODO, i want the strings for later, but for plotting float is better. Is this a correct way to do it?
-
+                                                    #probably not because I may want the strings in processing as well. but this can be done while processing
     @property
     def dTmap(self):
         return self._dTmap
@@ -666,16 +665,61 @@ class Experiment(object):
         if type(output) is str:
             self._output=output
         else:
-            raise ValueError('Output filename has to be str')
+            raise TypeError('Output filename has to be str')
     
     def set_materials(self,materials):
-        self._materials=materials.materials
+        """Function to assign Materials() to an Experiment()
+        Input: Materials() object
+        >>> uox = Material('1')
+        >>> zr = Material('2')
+        >>> mats = Materials(uox,zr)
+        >>> experiment = Experiment()
+        >>> experiment.set_materials(mats)
+        >>> experiment.materials
+        {'1': Material(matID=1), '2': Material(matID=2)}
+        """
+        if isinstance(materials,Materials):
+            self._materials=materials.materials
+        else:
+            raise TypeError('Materials() object is expected')
     
     def set_absorbers(self,absorbers):
-        self._absorbers=absorbers.absorbers #TODO
+        """Function to assign Absorbers() to an Experiment()
+        Input: Absorbers() object
+        >>> leadsheet = Absorber('leadsheet')
+        >>> alusheet = Absorber('alusheet')
+        >>> absorbers = Absorbers(alusheet,leadsheet)
+        >>> experiment = Experiment()
+        >>> experiment.set_absorbers(absorbers)
+        >>> experiment.absorbers
+        {'alusheet': Absorber(absID=alusheet), 'leadsheet': Absorber(absID=leadsheet)}
+        """
+        if isinstance(absorbers,Absorbers):
+            self._absorbers=absorbers.absorbers
+        else:
+            raise TypeError('Absorbers() object is expected')
         
     def set_detectors(self,detectors):
-        self._detectors=detectors.detectors #TODO
+        """Function to assign Absorbers() to an Experiment()
+        Input: Absorbers() object
+        >>> F5 = Detector('F5')
+        >>> F15 = Detector('F15')
+        >>> detectors = Detectors(F5,F15)
+        >>> experiment = Experiment()
+        >>> experiment.set_detectors(detectors)
+        >>> experiment.detectors
+        {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
+        >>> experiment.set_detectors(F5)
+        >>> experiment.detectors
+        {'F5': Detector(detID=F5)}
+        """
+        if isinstance(detectors,Detectors):
+            self._detectors=detectors.detectors
+        elif isinstance(detectors,Detector):
+            self._detectors=Detectors(detectors).detectors
+        else:
+            raise TypeError('Detectors() or Detector() object is expected')
+        
         
     def set_assembly(self,assembly=None):
         #TODO check that assemblypool doesnt cut in 17*pitch
