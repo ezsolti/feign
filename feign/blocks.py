@@ -112,7 +112,7 @@ class Materials(object):
         self.materials={}
         for arg in argv:
             if  not isinstance(arg,Material):
-                raise ValueError('Inputs need to be Material() objects')
+                raise TypeError('Inputs need to be Material() objects')
             elif arg.matID in self.materials:
                 raise ValueError('matID {} is duplicated'.format(arg.matID))
             else:
@@ -142,7 +142,7 @@ class Materials(object):
             else:
                 self.materials[material.matID]=material
         else:
-            raise ValueError('This is not a Material()')
+            raise TypeError('This is not a Material()')
     
     def remove(self,material):
         """Function to remove a Material() object from a Materials() object.
@@ -234,7 +234,7 @@ class Pins(object):
         self.pins={}
         for arg in argv:
             if  not isinstance(arg,Pin):
-                raise ValueError('Inputs need to be Pin() objects')
+                raise TypeError('Inputs need to be Pin() objects')
             elif arg.pinID in self.pins:
                 raise ValueError('pinID {} is duplicated'.format(arg.pinID))
             else:
@@ -264,7 +264,7 @@ class Pins(object):
             else:
                 self.pins[pin.pinID]=pin
         else:
-            raise ValueError('This is not a Pin()')
+            raise TypeError('This is not a Pin()')
     
     def remove(self,pin):
         """Function to remove a Pin() object from a Pins() object.
@@ -292,7 +292,7 @@ class Pins(object):
             print('You can remove only existing Pin()')
 
 class Assembly(object):
-    def __init__(self,N,M): #No need for N and M? set it separately?
+    def __init__(self,N,M):
         self.N=N
         self.M=M
         self._pitch=None
@@ -354,17 +354,19 @@ class Assembly(object):
             self._fuelmap=fuelmap
     
     def set_coolant(self, coolant=None):
-#        if coolant not in Material.materials:
-#            raise ValueError('Coolant material not defined')
-#        else: 
-        self._coolant=coolant
+        if isinstance(coolant, Material):
+            self._coolant=coolant.matID
+        else:
+            raise TypeError('Material() is expected')
+            
 
             
     def set_surrounding(self, surrounding=None):
-#        if surrounding not in Material.materials:
-#            raise ValueError('Surrounding material not defined')
-#        else: 
-        self._surrounding=surrounding
+        if isinstance(surrounding, Material):
+            self._surrounding=surrounding.matID
+        else: 
+            raise TypeError('Material() is expected')
+            
             
     def set_source(self, *args):
 #        if source not in Material.materials:
@@ -379,7 +381,61 @@ class Assembly(object):
         if isinstance(pool,Rectangle):
             self._pool=pool
         else:
-            raise ValueError('Pool has to be a Rectangle object')
+            raise TypeError('Pool has to be a Rectangle() object')
+            
+    def checkComplete(self):
+        """Function to check whether everything is defined correctly in an 
+           Assembly() object.
+           - checks whether any attribute is not defined (pool does not need to be defined)
+           - checks whether any pin contains any region with radius greater than
+             the pitch
+           - checks whether all the pins in the fuelmap are attributed to the assembly
+           - in case a pool is defined, it is checked whether the pool is around the assembly.
+           Returns False and print an error message otherwise.
+        """
+        if self.pins is None or self.pitch is None or \
+           self.coolant is None or self.fuelmap is None or \
+           self.source is None:                
+            print('ERROR: Assembly is not complete.')
+            return False
+        else: 
+            if False in [r<=self.pitch/2 for pin in self.pins.pins.values() for r in pin._radii]:
+                print('ERROR: in a Pin() a radius is greater than the pitch')
+                return False
+            
+            if [] in [pin._radii for pin in self.pins.pins.values()]:
+                print('Warning: a pin has no regions, considered as coolant channel')
+                
+            if False in [self.fuelmap[i][j] in self.pins.pins for i in range(self.N) for j in range(self.M)]:
+                print('ERROR: Assembly().fuelmap contains pin not included in Assembly.Pins()')
+                return False
+                
+            if self.pool is None:
+                print('Warning: no pool in the problem, the surrounding of the Assembly is filled with coolant material')
+                self._accommat=self._coolant
+                return True
+            else:
+                if self.surrounding is None:
+                    print('ERROR: Surrounding material has to be defined if pool is defined')
+                    return False
+                else: #Check that the pool is around the fuel assembly
+                    pooldummy=Rectangle(Point(self.N*self.pitch/2,self.M*self.pitch/2),
+                            Point(self.N*self.pitch/2,-self.M*self.pitch/2),
+                            Point(-self.N*self.pitch/2,-self.M*self.pitch/2),
+                            Point(-self.N*self.pitch/2,self.M*self.pitch/2))
+                    for corner in [self.pool.p1,self.pool.p2,self.pool.p3,self.pool.p4]:
+                        if pooldummy.encloses_point(corner):
+                            print('ERROR: Pool is inside fuel')
+                            return False
+                    if len(pooldummy.intersection(self.pool.p1p2))>1 or \
+                          len(pooldummy.intersection(self.pool.p2p3))>1 or \
+                          len(pooldummy.intersection(self.pool.p3p4))>1 or \
+                          len(pooldummy.intersection(self.pool.p4p1))>1:
+                        print('ERROR: Assembly does not fit in pool')
+                        return False
+                    else:
+                        return True        
+
             
 class Detector(object):
     def __init__(self,detID=None):
@@ -404,13 +460,13 @@ class Detector(object):
         if isinstance(location,Point):
             self._location=location
         else:
-            raise ValueError('Detector location has to be Point object')
+            raise TypeError('Detector location has to be Point() object')
 
     def set_collimator(self,collimator=None):
         if isinstance(collimator,Collimator):
             self._collimator=collimator
         else:
-            raise ValueError('Detector location has to be Point object')
+            raise TypeError('Collimator has to be Collimator() object')
 
 class Detectors(object):
     def __init__(self,*argv):
@@ -426,7 +482,7 @@ class Detectors(object):
         self.detectors={}
         for arg in argv:
             if  not isinstance(arg,Detector):
-                raise ValueError('Inputs need to be Detector() objects')
+                raise TypeError('Inputs need to be Detector() objects')
             elif arg.detID in self.detectors:
                 raise ValueError('detID {} is duplicated'.format(arg.detID))
             else:
@@ -456,7 +512,7 @@ class Detectors(object):
             else:
                 self.detectors[detector.detID]=detector
         else:
-            raise ValueError('This is not a Detector()')
+            raise TypeError('This is not a Detector()')
     
     def remove(self,detector):
         """Function to remove a Detector() object from a Detectors() object.
@@ -483,7 +539,7 @@ class Detectors(object):
         except KeyError:
             print('You can remove only existing Detector()')
             
-class Absorber(object): #TODO: absorber sets might be attributed to Detectors
+class Absorber(object): 
     def __init__(self,absID=None):
         self.absID=absID
         self._rectangle=None  #TODO: .form to accommodate circle
@@ -511,7 +567,7 @@ class Absorber(object): #TODO: absorber sets might be attributed to Detectors
         if isinstance(rectangle,Rectangle):
             self._rectangle=rectangle
         else:
-            raise ValueError('Absorber has to be a Rectangle object')
+            raise TypeError('Absorber has to be a Rectangle object')
             
     def set_material(self, material=None):
 #        if material not in Material.materials:
@@ -542,7 +598,7 @@ class Absorbers(object):
         self.absorbers={}
         for arg in argv:
             if  not isinstance(arg,Absorber):
-                raise ValueError('Inputs need to be Absorber() objects')
+                raise TypeError('Inputs need to be Absorber() objects')
             elif arg.absID in self.absorbers:
                 raise ValueError('absID {} is duplicated'.format(arg.absID))
             else:
@@ -572,7 +628,7 @@ class Absorbers(object):
             else:
                 self.absorbers[absorber.absID]=absorber
         else:
-            raise ValueError('This is not an Absorber()')
+            raise TypeError('This is not an Absorber()')
     
     def remove(self,absorber):
         """Function to remove an Absorber() object from an Absorbers() object.
@@ -624,13 +680,13 @@ class Collimator(object):
         if isinstance(front,Segment):
             self._front=front
         else:
-            raise ValueError('Collimator front has to be a Segment object')
+            raise TypeError('Collimator front has to be a Segment object')
     
     def set_back(self,back=None):
         if isinstance(back,Segment):
             self._back=back
         else:
-            raise ValueError('Collimator back has to be a Segment object')
+            raise TypeError('Collimator back has to be a Segment object')
 
                         
 class Experiment(object):
@@ -757,12 +813,12 @@ class Experiment(object):
             elif assembly.pool is None:
                 print('No pool in the problem, the surrounding of the Assembly is filled with coolant material')
                 self._assembly=assembly
-                self._pins=assembly.pins.pins
+                self._pins=self._assembly.pins.pins
             elif assembly.surrounding is None:
                 raise ValueError('Surrounding material has to be defined if pool is defined') 
             else:
                 self._assembly=assembly
-                self._pins=assembly.pins.pins
+                self._pins=self._assembly.pins.pins
         else:
             raise ValueError('Assembly has to be an Assembly() object')
 
@@ -810,7 +866,7 @@ class Experiment(object):
         for i in range(N):
             for j in range(M):
                 sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
-                if True in sourceIn: #TODO maybe a source material should be?
+                if True in sourceIn: 
                     dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
                     
                     centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
@@ -828,14 +884,14 @@ class Experiment(object):
                                 if len(pinChannel.intersection(segmentSourceDetector))>=1: #check only pins in between Source and Detector
                                     if ii==i and jj==j: #pinChannel.encloses_point(centerSource): #in that case, only one intersection
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO if pins get into assembly, then look in that
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO now if ASSEMBLY IS MODIFIED .pins is still the same, isnt it? have to keep the class? NO; IT IS NOT THE SAME, IT GETS MODIFIED AS WELL, SINCE I DONT JUST PASS THE DICTIONARY, BUT THE ATTRIBUTE OF A CLASS.
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             D=Point.distance(intersects[0],centerSource) 
                                             dT[mat]=dT[mat]+(D-Dprev)
                                             Dprev=D
                                     else:
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO if pins get into assembly, then look in that
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             if len(intersects)>1: #if len()==1, it is tangent, no distance traveled
                                                 D=Point.distance(intersects[0],intersects[1])
@@ -843,7 +899,8 @@ class Experiment(object):
                                                 Dprev=D                                        
                                             
                         ###Distance traveled outside the pool = distance of ray-pool intersect and detector
-                        dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+Point.distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
+                        if self.assembly.pool is not None:
+                            dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+Point.distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
                         
                         ###Distance traveled in coolantMat = total source-detector distance - everything else
                         dT[self.assembly.coolant]=dT[self.assembly.coolant]+Point.distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
@@ -891,15 +948,18 @@ class Experiment(object):
 #        if self._elines is None:
 #            print('Only distance travelled in various materials will be computed')
     
-    def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100]):
-        
+    def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4):
+        """Function to plot the geometry of an Experiment() object.
+           The function will randomly set colors to Material() objects for which colors
+           were previously not defined.
+           Inputs:
+               out: name of output file (str, default:None)
+               dpi: set the dpi (int, default:600)
+               xl,yl: region of the geometry to plot in cms (default:xl=[-100,100],yl=[-100,100]) 
+               detectorSize: radius of white circle illustrating the detector points. (default:0.4)
+        """
         import random
-        import matplotlib.pyplot as plt
-#        import matplotlib.path as mpath
-#        import matplotlib.lines as mlines
-#        import matplotlib.patches as mpatches
-#        from matplotlib.collections import PatchCollection
-        
+        import matplotlib.pyplot as plt        
         for mat in self.materials:
             if self.materials[mat].color is None:
                 self.materials[mat].set_color("#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
@@ -910,13 +970,15 @@ class Experiment(object):
         p=self.assembly.pitch/2
         fig, ax = plt.subplots()
         ax.patch.set_facecolor(self.materials[self.assembly.surrounding].color)
-        polygon = plt.Polygon([[pool.p1.x,pool.p1.y],[pool.p2.x,pool.p2.y],[pool.p3.x,pool.p3.y],[pool.p4.x,pool.p4.y]], True,color=self.materials[self.assembly.coolant].color)
-        ax.add_artist(polygon)
+        if self.assembly.pool is not None:
+            pool=self.assembly.pool
+            polygon = plt.Polygon([[pool.p1.x,pool.p1.y],[pool.p2.x,pool.p2.y],[pool.p3.x,pool.p3.y],[pool.p4.x,pool.p4.y]], True,color=self.materials[self.assembly.coolant].color)
+            ax.add_artist(polygon)
         #fuelmap
         for i in range(N):
             for j in range(M):
                 center=[-p*(N-1)+j*2*p,p*(N-1)-i*2*p]
-                for r,m in zip(reversed(self.pins[self.assembly.fuelmap[i][j]]._radii),reversed(self.pins[self.assembly.fuelmap[i][j]]._materials)): #TODO if pins get into assembly, then look in that
+                for r,m in zip(reversed(self.pins[self.assembly.fuelmap[i][j]]._radii),reversed(self.pins[self.assembly.fuelmap[i][j]]._materials)): 
                     circle1 = plt.Circle((center[0], center[1]), r, color=self.materials[m].color)
                     ax.add_artist(circle1)
         for a in self.absorbers:
@@ -924,7 +986,7 @@ class Experiment(object):
             polygon = plt.Polygon([[absorber.rectangle.p1.x,absorber.rectangle.p1.y],[absorber.rectangle.p2.x,absorber.rectangle.p2.y],[absorber.rectangle.p3.x,absorber.rectangle.p3.y],[absorber.rectangle.p4.x,absorber.rectangle.p4.y]], True,color=self.materials[absorber.material].color)
             ax.add_artist(polygon)
         for d in self.detectors:
-            circle1= plt.Circle((self.detectors[d].location.x,self.detectors[d].location.y),0.4,color='white') #TODO, maybe dont hard code radius?
+            circle1= plt.Circle((self.detectors[d].location.x,self.detectors[d].location.y),detectorSize,color='white')
             ax.add_artist(circle1)
             #TODO collimator
         plt.xlim(xl[0],xl[1])
