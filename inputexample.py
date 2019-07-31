@@ -48,23 +48,22 @@ materials=Materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
 ###Pins
 
 fuel=Pin('1')
-fuel.add_region((0.41,'1'))  #todo i should be able to refer with variable name to the material
-fuel.add_region((0.42,'2'))
-fuel.add_region((0.48,'3'))
+fuel.add_region(uo2,0.41)
+fuel.add_region(he,0.42)
+fuel.add_region(zr,0.48)
 
 waterchannel=Pin('2')
-waterchannel.add_region((0.48,'4'))
 
 rodguide=Pin('3')
-rodguide.add_region((0.42,'4'))
-rodguide.add_region((0.48,'3'))
+rodguide.add_region(h2o,0.42)
+rodguide.add_region(zr,0.48)
 
 pins=Pins(fuel,rodguide)
 ###Assembly
 
 pwrOrig=Assembly(17,17)
 pwrOrig.set_pitch(1.26)
-pwrOrig._source=['1'] #to be fixed, add sourcePin or something like that!
+pwrOrig.set_source(uo2)
 pwrOrig.set_coolant('4')
 pwrOrig.set_surrounding('6')
 pwrOrig.set_pins(pins)
@@ -165,11 +164,11 @@ elines=['0.4971',
 pwrClab=Experiment()
 pwrClab.set_assembly(pwrOrig)
 pwrClab.set_elines(elines)
-pwrClab.set_output('testOOP6.dat')
+pwrClab.set_output('testOOP8.dat')
 pwrClab.set_detectors(detectors)
 pwrClab.set_absorbers(absorbers)
 pwrClab.set_materials(materials)
-start = time.time()
+#start = time.time()
 #for _ in range(10):
 pwrClab.Run()
 #end = time.time()

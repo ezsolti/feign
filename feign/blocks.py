@@ -168,12 +168,19 @@ class Materials(object):
             print('You can remove only Material()')
         except KeyError:
             print('You can remove only existing Material()')
-        
+
+
 class Pin(object):
-    """creates a new cell"""
     def __init__(self,pinID=None):
+        """Creates a new Pin() object.
+        Input: pinID
+        With the self.add_region() function coaxial circles can be  added to describe
+        the content (eg. fuel rod, helium gap, clad).
+        In case no region is added, the Pin() object will behave as an empty channel
+        filled with the coolant material.
+        """
         self.pinID=pinID
-        self._regions=[]   #TODO make it None???
+        self._regions=[]
         self._materials=[]
         self._radii=[]
         if pinID is None or type(pinID) is not str:
@@ -185,16 +192,33 @@ class Pin(object):
     @property
     def regions(self):
         return self._regions
-        
-    def add_region(self,region=(0,None)): #TODO what if r is bigger than p/2?? where to check? in assy
-        if len(self._regions)>0 and self._regions[-1][0]>=region[0]: #TODO add pin through variable
-            raise ValueError('Radii are not increasing in cell #{}'.format(self.pinID))
-#        elif region[1] not in Material.materials:
-#            raise ValueError('Material does not exist')  TODO: such a check when pins are added to experiment
+    
+    def add_region(self,material=None,radius=None): #TODO what if r is bigger than p/2?? where to check? in assy
+        """Function to add coaxial circles and circle rings to a pin.
+        Input: Material() and radius
+        In case of consecutive calls (ie. more regions added), the radii has to
+        increase.
+        Example, common PWR rod:
+        >>> uo2 = Material('1')
+        >>> he = Material('2')
+        >>> zr = Material('3')
+        >>> fuel = Pin('1')
+        >>> fuel.add_region(uo2,0.41)
+        >>> fuel.add_region(he,0.42)
+        >>> fuel.add_region(zr,0.48)
+        """
+        if isinstance(material,Material):
+            self._materials.append(material.matID)
         else:
-            self._regions.append(region)
-            self._radii.append(region[0])
-            self._materials.append(region[1])
+            raise TypeError('Material() object is expected')
+            
+        if isFloat(radius):
+            if len(self._radii)>0 and self._radii[-1]>=radius:
+                raise ValueError('Radii are not increasing in pin #{}'.format(self.pinID))
+            else:
+                self._radii.append(radius)
+        
+        self._regions.append((material,radius))        
 
 class Pins(object):
     def __init__(self,*argv):
