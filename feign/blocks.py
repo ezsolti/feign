@@ -23,8 +23,18 @@ def isFloat(s):
     except ValueError:
         return False
 
-def readMu(path,column,energy): #TODO restructure somehow
-    inputfile=open(os.getcwd()+path,'r').readlines()
+def readMu(path,column,energy):
+    """File to read attenuaton coefficients from XCOM datafiles.
+    Inputs:
+        path: path to the file (str)
+        column: column which contains the total attenuation coefficients in case more columns are present
+        energy: a list of floats or a float at which energies the coefficients are needed.
+    Returns either a list of floats or a float, the interpolated value(s) of the attenuaton coefficient.
+    """
+    try:
+        inputfile=open(path,'r').readlines()
+    except FileNotFoundError:
+        inputfile=open(os.getcwd()+path,'r').readlines()
     en=[]
     mu=[]
     for line in inputfile:
@@ -570,19 +580,17 @@ class Absorber(object):
             raise TypeError('Absorber has to be a Rectangle object')
             
     def set_material(self, material=None):
-#        if material not in Material.materials:
-#            raise ValueError('Absorber material not defined')
-#        else: 
-        self._material=material
+        if isinstance(material, Material):
+            self._material=material.matID
+        else:
+            raise TypeError('Material() is expected')
 
             
     def set_accommat(self, accommat=None):
-#        if accommat not in Material.materials:
-#            raise ValueError('Accommodating material not defined')
-#        else:
-        self._accommat=accommat
-    #TODO: check that material is available in Experiment        
-    #TODO: a way to check whether no place is duplicated
+        if isinstance(accommat, Material):
+            self._accommat=accommat.matID
+        else:
+            raise TypeError('Material() is expected')
     
 class Absorbers(object):
     def __init__(self,*argv):
@@ -847,15 +855,19 @@ class Experiment(object):
     def get_MuTable(self):
         """Creates a nested dictionary to hold the attenuation coefficients.
         Outer keys are the energies, inner keys are the materials"""
-        mu={}
-        try:
-            for e in self._elines:
-                mu[e]={key: readMu(self.materials[key].path[0],self.materials[key].path[1],float(e)) for key in self.materials}
-            self._mu=mu
-        except FileNotFoundError:
-            print('The data file is not present')
-        except IndexError:
-            print('Not enough column in file')
+        mu={e: {m: 0 for m in self.materials} for e in self._elines}
+         
+        for m in self.materials:
+            mum=readMu(self.materials[m].path[0],self.materials[m].path[1],self.elines)
+            for ei,mui in zip(self._elines,mum):
+                mu[ei][m]=mui
+                
+        self._mu=mu
+#        OLD, nicer but more file reading.
+#        for e in self._elines:
+#            mu[e]={key: readMu(self.materials[key].path[0],self.materials[key].path[1],float(e)) for key in self.materials}
+#        self._mu=mu
+
             
     def distanceTravelled(self,detector):
         dTmap={key: [[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)] for key in self.materials}  
@@ -884,7 +896,7 @@ class Experiment(object):
                                 if len(pinChannel.intersection(segmentSourceDetector))>=1: #check only pins in between Source and Detector
                                     if ii==i and jj==j: #pinChannel.encloses_point(centerSource): #in that case, only one intersection
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): #TODO now if ASSEMBLY IS MODIFIED .pins is still the same, isnt it? have to keep the class? NO; IT IS NOT THE SAME, IT GETS MODIFIED AS WELL, SINCE I DONT JUST PASS THE DICTIONARY, BUT THE ATTRIBUTE OF A CLASS.
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             D=Point.distance(intersects[0],centerSource) 
                                             dT[mat]=dT[mat]+(D-Dprev)
@@ -1004,7 +1016,7 @@ class Experiment(object):
             dTmap[name]=self.distanceTravelled(self.detectors[name]) 
         self._dTmap=dTmap
 
-        if self._elines is not None:        
+        if self._elines is not None:  #TODO if i check this elsewhere, can be removed or NO, because in that case maybe just the distance travelled is of interest.      
             geomefficiency=[]
             contributionMapAve={}
             self.get_MuTable()
