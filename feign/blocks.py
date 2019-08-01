@@ -566,6 +566,7 @@ class Absorber(object):
     def __init__(self,absID=None):
         self.absID=absID
         self._rectangle=None  #TODO: .form to accommodate circle
+        self._form=None  #TODO: .form to accommodate circle
         self._material=None
         self._accommat=None
         if absID is None:
@@ -579,12 +580,22 @@ class Absorber(object):
         return self._rectangle
 
     @property
+    def form(self):
+        return self._form
+
+    @property
     def material(self):
         return self._material
 
     @property
     def accommat(self):
         return self._accommat
+
+    def set_form(self,form=None):
+        if isinstance(form,Rectangle) or isinstance(form,Circle):
+            self._form=form
+        else:
+            raise TypeError('Absorber has to be a Rectangle or Circle object')
     
     def set_rectangle(self,rectangle=None):
         if isinstance(rectangle,Rectangle):
@@ -923,15 +934,17 @@ class Experiment(object):
                         dT[self.assembly.coolant]=dT[self.assembly.coolant]+Point.distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
                         
                         ###Distance traveled in absorbers
+                        ###Absorber can be Circle() or Rectangular, the syntax
+                        ###is the same regarding .intersection(), thus the code
+                        ###handles both as it is. 
                         for absorber in self.absorbers.values():
-                            intersects=absorber.rectangle.intersection(segmentSourceDetector)
+                            intersects=absorber.form.intersection(segmentSourceDetector)
                             if len(intersects)>1:
                                 dabs=Point.distance(intersects[0],intersects[1])
                             else: #TODO if detector or source is within absorber?? elif absorber.rectangle.encloses_point(detector)
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
                             dT[absorber.accommat]=dT[absorber.accommat]-dabs
-                        #TODO CIRCLE ABSORBER?? rectangle change to "shape" or maybe something similar to avoid np.array().shape confusion. form?, and has the same intersection()
                         #Update the map
                         for key in dT:
                             dTmap[key][i][j]=dT[key]
@@ -1004,8 +1017,12 @@ class Experiment(object):
                     ax.add_artist(circle1)
         for a in self.absorbers:
             absorber=self.absorbers[a]
-            polygon = plt.Polygon([[absorber.rectangle.p1.x,absorber.rectangle.p1.y],[absorber.rectangle.p2.x,absorber.rectangle.p2.y],[absorber.rectangle.p3.x,absorber.rectangle.p3.y],[absorber.rectangle.p4.x,absorber.rectangle.p4.y]], True,color=self.materials[absorber.material].color)
-            ax.add_artist(polygon)
+            if isinstance(absorber.form,Rectangle):
+                polygon = plt.Polygon([[absorber.form.p1.x,absorber.form.p1.y],[absorber.form.p2.x,absorber.form.p2.y],[absorber.form.p3.x,absorber.form.p3.y],[absorber.form.p4.x,absorber.form.p4.y]], True,color=self.materials[absorber.material].color)
+                ax.add_artist(polygon)
+            else:
+                circle1 = plt.Circle((absorber.form.c.x,absorber.form.c.y),absorber.form.r,color=self.materials[absorber.material].color)
+                ax.add_artist(circle1)
         for d in self.detectors:
             circle1= plt.Circle((self.detectors[d].location.x,self.detectors[d].location.y),detectorSize,color='white')
             ax.add_artist(circle1)
