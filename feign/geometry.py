@@ -143,7 +143,7 @@ class Circle(object):
         self.r = R
 
     def __repr__(self):
-        return "Circle(C=(%.3f, %.3f),R=%.3f" % (self.c.x, self.c.y,self.r)
+        return "Circle(C=(%.3f, %.3f),R=%.3f)" % (self.c.x, self.c.y,self.r)
 
     def intersection(self,seg):
         """The function finds the intersections of a Segment with a Circle.
@@ -200,6 +200,22 @@ class Circle(object):
                 if inter2.inBetween(seg.p,seg.q):
                     inters.append(inter2)
                 return inters
+
+    def encloses_point(self,P):
+        """Function to assess whether a point is enclosed by a Circle().
+        >>> c=Circle(Point(1,1),5)
+        >>> P=Point(3,4)
+        >>> c.encloses_point(P)
+        True
+        >>> Q=Point(4,3)
+        >>> c=Circle(Point(1,1),5)
+        False
+        """
+        if Point.distance(self.c,P)<self.r:
+            return True
+        else:
+            return False
+
         
 class Rectangle(object):
     def __init__(self,P1,P2,P3,P4):
