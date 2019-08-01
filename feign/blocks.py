@@ -6,8 +6,6 @@ Created on Mon Jul 22 11:12:45 2019
 @author: zsolt
 """
 
-#TODO load test data!!!
-
 import os
 import numpy as np
 import math
@@ -45,7 +43,12 @@ def readMu(path,column,energy):
     return np.interp(energy,en,mu)
 
 
-def is_hex_color(input_string): #from https://stackoverflow.com/questions/42876366/check-if-a-string-defines-a-color
+def is_hex_color(input_string): 
+    """Function to assess whether a string is hex color description.
+    Taken from https://stackoverflow.com/questions/42876366/check-if-a-string-defines-a-color
+    Input: str
+    Returns boolean
+    """
     HEX_COLOR_REGEX = r'^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$'
     regexp = re.compile(HEX_COLOR_REGEX)
     if regexp.search(input_string):
@@ -60,7 +63,6 @@ class Material(object):
         self.matID = matID
         self._density = None
         self._path = None
-        self._data = None #todo to preload data?!
         self._color = None
         if matID is None or type(matID) is not str:
             raise ValueError('matID has to be defined with a string')
@@ -203,7 +205,7 @@ class Pin(object):
     def regions(self):
         return self._regions
     
-    def add_region(self,material=None,radius=None): #TODO what if r is bigger than p/2?? where to check? in assy
+    def add_region(self,material=None,radius=None): 
         """Function to add coaxial circles and circle rings to a pin.
         Input: Material() and radius
         In case of consecutive calls (ie. more regions added), the radii has to
@@ -303,8 +305,17 @@ class Pins(object):
 
 class Assembly(object):
     def __init__(self,N,M):
-        self.N=N
-        self.M=M
+        """Function to initialize Assembly() objects.
+        Inputs: N,M number of positions in y and x direction in the Assembly.
+                N,M is converted to in if possible.
+        """
+        try:
+            self.N=int(N)
+            self.M=M
+        except ValueError:
+            raise ValueError('N,M has to be decimal')
+        except TypeError:
+            raise TypeError('N,M has to be int')
         self._pitch=None
         self._pins=None
         self._fuelmap=None
@@ -312,7 +323,10 @@ class Assembly(object):
         self._surrounding=None
         self._source=None
         self._pool=None
-        
+
+    def __repr__(self):
+        return "Assembly(N=%d,M=%d)" % (self.absID)
+    
     @property
     def pitch(self):
         return self._pitch
@@ -358,8 +372,6 @@ class Assembly(object):
         fuelmap=np.array(fuelmap)
         if  fuelmap.shape[0] != self.N or fuelmap.shape[1] != self.M:
             raise ValueError('Fuelmap has wrong size')
-#        elif sum(np.isin(fuelmap.flatten(),list(Pin.pins)))<self.N*self.M:
-#            raise ValueError('Pin cell not defined')  TODO: check this in experiment!!!
         else:
             self._fuelmap=fuelmap
     
@@ -417,6 +429,7 @@ class Assembly(object):
                 print('Warning: a pin has no regions, considered as coolant channel')
                 
             if False in [self.fuelmap[i][j] in self.pins.pins for i in range(self.N) for j in range(self.M)]:
+                #        elif sum(np.isin(fuelmap.flatten(),list(Pin.pins)))<self.N*self.M:
                 print('ERROR: Assembly().fuelmap contains pin not included in Assembly.Pins()')
                 return False
                 
@@ -664,18 +677,15 @@ class Absorbers(object):
             print('You can remove only existing Absorber()')
     
 class Collimator(object):
-    #collimators={}
     def __init__(self,collID):
         self.collID=collID
         self._front=None
         self._back=None
-     #   if collID in Collimator.collimators:
-     #       raise ValueError('Absorber "{}" already exists'.format(detID))
-     #   elif detID is None:
-     #       raise ValueError('absID has to be defined')
-     #   else:
-     #       Collimator.collimator[collID]=self
-            
+        self._color=None
+
+    def __repr__(self):
+        return "Collimator()" 
+        
     @property
     def front(self):
         return self._front
@@ -683,6 +693,10 @@ class Collimator(object):
     @property
     def back(self):
         return self._back
+    
+    @property
+    def color(self):
+        return self._color
     
     def set_front(self,front=None):
         if isinstance(front,Segment):
@@ -695,6 +709,15 @@ class Collimator(object):
             self._back=back
         else:
             raise TypeError('Collimator back has to be a Segment object')
+            
+    def set_color(self, color=None):
+        """Color of collimator in case the geometry is plotted.
+        str '#18BA09' format
+        """
+        if type(color) is str and is_hex_color(color):
+            self._color=color
+        else:
+            raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self.matID)))
 
                         
 class Experiment(object):
@@ -710,7 +733,10 @@ class Experiment(object):
         self._dTmap=None
         self._contributionMap=None
         self._geomEff=None
-        
+
+    def __repr__(self):
+        return "Experiment()"
+    
     @property
     def output(self):
         return self._output
@@ -749,7 +775,7 @@ class Experiment(object):
     
     @property
     def contributionMap(self):
-        return self.contributionMap
+        return self._contributionMap
     
     def set_output(self,output='output.dat'):
         if type(output) is str:
@@ -812,39 +838,17 @@ class Experiment(object):
         
         
     def set_assembly(self,assembly=None):
+        """Function to assignt an Assembly() object to Experiment()
+        Input: Assembly() object
+        """
     
         if isinstance(assembly,Assembly):
-            if assembly.pins is None or assembly.pitch is None or \
-            assembly.coolant is None or assembly.fuelmap is None or \
-            assembly.source is None:
-                raise ValueError('Assembly is not complete')
-            elif assembly.pool is None:
-                print('No pool in the problem, the surrounding of the Assembly is filled with coolant material')
-                self._assembly=assembly
-                self._pins=self._assembly.pins.pins
-            elif assembly.surrounding is None:
-                raise ValueError('Surrounding material has to be defined if pool is defined') 
-            else:
-                self._assembly=assembly
-                self._pins=self._assembly.pins.pins
+            self._assembly=assembly
+            self._pins=self._assembly.pins.pins
         else:
             raise ValueError('Assembly has to be an Assembly() object')
 
-        #Check that the pool is around the fuel assembly
-        pooldummy=Rectangle(Point(assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2),
-                            Point(assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
-                            Point(-assembly.N*assembly.pitch/2,-assembly.M*assembly.pitch/2),
-                            Point(-assembly.N*assembly.pitch/2,assembly.M*assembly.pitch/2))
-        
-        for corner in [assembly.pool.p1,assembly.pool.p2,assembly.pool.p3,assembly.pool.p4]:
-            if pooldummy.encloses_point(corner):
-                raise ValueError('Pool is inside the fuel')
-        
-        if len(pooldummy.intersection(assembly.pool.p1p2))>1 or \
-           len(pooldummy.intersection(assembly.pool.p2p3))>1 or \
-           len(pooldummy.intersection(assembly.pool.p3p4))>1 or \
-           len(pooldummy.intersection(assembly.pool.p4p1))>1:
-            raise ValueError('Assembly does not fit in pool')
+
             
     def set_elines(self,elines=None):
         if (type(elines) is list) and (False not in [type(e) is str for e in elines]) and (False not in [isFloat(e) for e in elines]):
@@ -886,6 +890,7 @@ class Experiment(object):
                     #Only track rays which pass through the collimator
                     if detector.collimator==None or (len(detector.collimator.front.intersection(segmentSourceDetector))==1 and
                        len(detector.collimator.back.intersection(segmentSourceDetector))==1):
+                        
                        ###Distances traveled in other pin positions
                         for ii in range(N):
                             for jj in range(M):
@@ -930,6 +935,9 @@ class Experiment(object):
                         #Update the map
                         for key in dT:
                             dTmap[key][i][j]=dT[key]
+                    else: #not through collimator
+                        for key in dT:
+                            dTmap[key][i][j]=np.Inf
         return dTmap
     
     def attenuation(self,dTmap,mue,detector):
@@ -949,6 +957,7 @@ class Experiment(object):
         return contribmap
     
 #    def _checkData(self):
+#        CHECK COLLIMATORS DONT CROSS EACHOTHER. if there is back, needs to be a front.
 #        if self._assembly is None:
 #            raise ValueError('Assembly has to be present in Experiment')
 #        else:
@@ -1000,15 +1009,21 @@ class Experiment(object):
         for d in self.detectors:
             circle1= plt.Circle((self.detectors[d].location.x,self.detectors[d].location.y),detectorSize,color='white')
             ax.add_artist(circle1)
-            #TODO collimator
+            if self.detectors[d].collimator is not None:
+                if self.detectors[d].collimator.color is None:
+                    self.detectors[d].collimator.set_color('#C2C5CC')
+                #the "orientation" of back and front is not know, so I plot two ways.
+                polygon=plt.Polygon([[self.detectors[d].collimator.front.p.x,self.detectors[d].collimator.front.p.y],[self.detectors[d].collimator.front.q.x, self.detectors[d].collimator.front.q.y],[self.detectors[d].collimator.back.p.x,self.detectors[d].collimator.back.p.y],[self.detectors[d].collimator.back.q.x,self.detectors[d].collimator.back.q.y]],True,color=self.detectors[d].collimator.color)
+                ax.add_artist(polygon)
+                polygon=plt.Polygon([[self.detectors[d].collimator.front.p.x,self.detectors[d].collimator.front.p.y],[self.detectors[d].collimator.front.q.x, self.detectors[d].collimator.front.q.y],[self.detectors[d].collimator.back.q.x,self.detectors[d].collimator.back.q.y],[self.detectors[d].collimator.back.p.x,self.detectors[d].collimator.back.p.y]],True,color=self.detectors[d].collimator.color)
+                ax.add_artist(polygon)
         plt.xlim(xl[0],xl[1])
         plt.ylim(yl[0],yl[1])
         plt.gca().set_aspect('equal', adjustable='box')
         if out is not None:
             plt.savefig(out,dpi=dpi)
         plt.show()
-        
-        
+     
     def Run(self):
         dTmap={}
         for name in self.detectors:
