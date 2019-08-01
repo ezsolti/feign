@@ -211,7 +211,7 @@ class Circle(object):
         >>> c=Circle(Point(1,1),5)
         False
         """
-        if Point.distance(self.c,P)<self.r:
+        if Point.distance(self.c,P)<self.r+0.0000001:
             return True
         else:
             return False
