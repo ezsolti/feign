@@ -5,7 +5,7 @@ zs. elter 2019
 """
 
 import unittest
-from feign.geometry import *
+#from feign.geometry import *
 
 class TestCircleIntersection(unittest.TestCase):
     def test_intersection_horizontal(self):
@@ -49,7 +49,17 @@ class TestCircleIntersection(unittest.TestCase):
         c=Circle(Point(1,1),5)
         s1=Segment(Point(1,1),Point(2,9))
         self.assertTrue(len(c.intersection(s1)) == 1)
-
+        
+        
+class TestCircleEncloses(unittest.TestCase):
+    def test_encloses_in(self):
+        c=Circle(Point(1,1),5)
+        P=Point(3,4)
+        self.assertTrue(c.encloses_point(P))
+    def test_encloses_out(self):
+        c=Circle(Point(1,1),5)
+        P=Point(10,11)
+        self.assertFalse(c.encloses_point(P))
 
 if __name__ == '__main__':
     unittest.main()
