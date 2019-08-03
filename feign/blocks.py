@@ -325,7 +325,7 @@ class Assembly(object):
         self._pool=None
 
     def __repr__(self):
-        return "Assembly(N=%d,M=%d)" % (self.absID)
+        return "Assembly(N=%d,M=%d)" % (self.N,self.M)
     
     @property
     def pitch(self):
@@ -435,7 +435,7 @@ class Assembly(object):
                 
             if self.pool is None:
                 print('Warning: no pool in the problem, the surrounding of the Assembly is filled with coolant material')
-                self._accommat=self._coolant
+                self._surrounding=self._coolant
                 return True
             else:
                 if self.surrounding is None:
@@ -565,8 +565,7 @@ class Detectors(object):
 class Absorber(object): 
     def __init__(self,absID=None):
         self.absID=absID
-        self._rectangle=None  #TODO: .form to accommodate circle
-        self._form=None  #TODO: .form to accommodate circle
+        self._form=None  
         self._material=None
         self._accommat=None
         if absID is None:
@@ -575,9 +574,6 @@ class Absorber(object):
     def __repr__(self):
         return "Absorber(absID=%s)" % (self.absID)
         
-    @property
-    def rectangle(self):
-        return self._rectangle
 
     @property
     def form(self):
@@ -596,12 +592,6 @@ class Absorber(object):
             self._form=form
         else:
             raise TypeError('Absorber has to be a Rectangle or Circle object')
-    
-    def set_rectangle(self,rectangle=None):
-        if isinstance(rectangle,Rectangle):
-            self._rectangle=rectangle
-        else:
-            raise TypeError('Absorber has to be a Rectangle object')
             
     def set_material(self, material=None):
         if isinstance(material, Material):
@@ -688,7 +678,7 @@ class Absorbers(object):
             print('You can remove only existing Absorber()')
     
 class Collimator(object):
-    def __init__(self,collID):
+    def __init__(self,collID=None):
         self.collID=collID
         self._front=None
         self._back=None
@@ -710,14 +700,31 @@ class Collimator(object):
         return self._color
     
     def set_front(self,front=None):
+        """
+        >>> c1=Collimator()
+        >>> c1.set_back(Segment(Point(0,0),Point(1,0)))
+        >>> c1.set_front(Segment(Point(0.5,-1),Point(0.5,1)))
+        ValueError('Collimator back and front should not intersect')
+        """
         if isinstance(front,Segment):
-            self._front=front
+            if self._back is None:
+                self._front=front
+            elif len(self._back.intersection(front))>0:
+                    return ValueError('Collimator back and front should not intersect')
+            else:
+                self._front=front
         else:
             raise TypeError('Collimator front has to be a Segment object')
     
     def set_back(self,back=None):
         if isinstance(back,Segment):
-            self._back=back
+            if self._front is None:
+                self._back=back
+            elif len(self._front.intersection(back))>0:
+                    return ValueError('Collimator back and front should not intersect')
+            else:
+                self._back=back
+            
         else:
             raise TypeError('Collimator back has to be a Segment object')
             
@@ -941,7 +948,15 @@ class Experiment(object):
                             intersects=absorber.form.intersection(segmentSourceDetector)
                             if len(intersects)>1:
                                 dabs=Point.distance(intersects[0],intersects[1])
-                            else: #TODO if detector or source is within absorber?? elif absorber.rectangle.encloses_point(detector)
+                            elif len(intersects)==1: #if the detector or source is within absorber.
+                                if absorber.form.encloses_point(detector.location):
+                                    dabs=Point.distance(intersects[0],detector.location)
+                                elif absorber.form.encloses_point(centerSource):
+                                    dabs=Point.distance(intersects[0],centerSource)
+                                    print('Warning: absorber #%s is around source at %.2f,%.2f'%(absorber.absID,centerSource.x,centerSource.y))
+                                else:
+                                    raise ValueError('Ray has only one intersection with Absorber \n and the detector neither the source is enclosed by it.')
+                            else: 
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
                             dT[absorber.accommat]=dT[absorber.accommat]-dabs
@@ -968,19 +983,80 @@ class Experiment(object):
                         contrib=contrib*math.exp(-1*mue[key]*dTmap[key][i][j])
                     contribmap[i][j]=contrib/(4*math.pi*(Point.distance(center,detector.location))**2)
         return contribmap
+
+    def checkComplete(self):
+        """Function to check whether everything is defined correctly in an 
+           Experiment() object.
+           - checks whether assembly is complete
+           - checks whether any pin contains any region with radius greater than
+             the pitch
+           - checks whether all the pins in the fuelmap are attributed to the assembly
+           - in case a pool is defined, it is checked whether the pool is around the assembly.
+           Returns False and print an error message otherwise.
+        """
+        
+        errors=[]
+        if self.assembly is None:
+            print('ERROR: Assembly is missing')
+            errors.append(False)
+        else:
+            if not self.assembly.checkComplete():
+                errors.append(False)
+            else:
+                if False in [mat in self.materials for pin in self.pins.values() for mat in pin._materials]:
+                    print('ERROR: pin material is missing from materials')
+                    errors.append(False)
     
-#    def _checkData(self):
-#        CHECK COLLIMATORS DONT CROSS EACHOTHER. if there is back, needs to be a front.
-#        if self._assembly is None:
-#            raise ValueError('Assembly has to be present in Experiment')
-#        else:
-#            #go through assembly mandatory attributes. pool can be the side of the assembly
-#        if self._pins: #ez nagyon az assemblybe kellene!!!
-#        if self._materials #now is the time to check that the pins are present in material
-#        if self._detectors is None:
-#            raise ValueError('At least one Detector() has to be defined')
-#        if self._elines is None:
-#            print('Only distance travelled in various materials will be computed')
+                if False in [source in self.materials for source in self.assembly.source]:
+                    print('ERROR: source material is not in Materials')
+                    errors.append(False)
+                        
+        
+
+        if self.materials is None:
+            print('ERROR: Materials are not defined')
+            errors.append(False)
+            
+
+        if self.detectors is None:
+            print('ERROR: no detector is defined.')
+            errors.append(False)
+        else:
+            if True in [det.location is None for det in self.detectors.values()]:
+                print('ERROR: Detector location is not defined')
+                errors.append(False)
+            if True in [det.collimator.back is None or det.collimator.front is None for det in self.detectors.values() if det.collimator is not None]:
+                print('ERROR: One collimator is not fully defined')
+                errors.append(False)
+
+        if self.absorbers is None:
+            self.set_absorbers(Absorbers())
+            print('No absorbers in the problem')
+        else:
+            if self.absorbers is not None and False in [absorber.material in self.materials for absorber in self.absorbers.values()]:
+                print('ERROR: absorber material is missing from materials')
+                errors.append(False) 
+            if self.absorbers is not None and False in [absorber.accommat in self.materials for absorber in self.absorbers.values()]:
+                print('ERROR: Absorber accommodating material is missing from materials')
+                errors.append(False)
+        if self._elines is None:
+            print('Warning: elines missing; only distance travelled in various materials will be computed')
+        else:
+            if True in [mat.density is None for mat in self.materials.values()]:
+                print('ERROR: Material density is missing')
+                errors.append(False)
+            if True in [mat.path is None for mat in self.materials.values()]:
+                print('ERROR: Path for attenuation file missing')
+                errors.append(False)
+            
+
+        
+        if len(errors)==0:
+            return True
+        else:
+            print('%d errors encountered.'%(len(errors)))
+            return False
+
     
     def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4):
         """Function to plot the geometry of an Experiment() object.
@@ -1042,9 +1118,11 @@ class Experiment(object):
         plt.show()
      
     def Run(self):
+        if self.checkComplete() is False:
+            raise ValueError('ERROR')
         dTmap={}
         for name in self.detectors:
-            print(name)
+            print("Detector "+name+" is being calculated")
             dTmap[name]=self.distanceTravelled(self.detectors[name]) 
         self._dTmap=dTmap
 
