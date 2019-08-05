@@ -6,10 +6,25 @@ import math
 import numpy as np
 
 class Point(object):
-    '''Creates a point on a coordinate plane with values x and y.'''
+    """
+    A class used to represent a Point.
+    
+    Parameters
+    ----------   
+    X : float
+      x coordinate of Point
+    Y : float
+      y coordinate of Point
+      
+    Attributes
+    ----------
+    x : float
+      x coordinate of Point
+    y : float
+      y coordinate of Point
+    """
 
     def __init__(self, X, Y):
-        '''Defines a Point with x and y coordinates'''
         self.x = X
         self.y = Y
 
@@ -17,16 +32,36 @@ class Point(object):
         return "Point(%.3f, %.3f)" % (self.x, self.y)
 
     def distance(self, other):
+        """The function calculates the distance of two Point objects.
+        
+        Parameters
+        ----------
+        other : Point()
+          the Point to which the distance is calculated
+          
+        Returns
+        ----------
+        float, distance of two points
+        """
         dx = self.x - other.x
         dy = self.y - other.y
         return math.sqrt(dx*dx + dy*dy)
         
     def inBetween(self,p1,p2):
-        """Function to assess whether a Point() is on the same line and
-        in between two other Point() objects. True is returned even if the point
-        is the same as one of the other two points.
-        Input: three Point() object
-        Output: boolean
+        """The function to assess whether a Point() is on the same line and
+        in between two other Point() objects.
+        
+        Parameters
+        ----------
+        p1,p2 : Point()
+          Points for which the test point is checked whether is placed in between.
+          
+        Returns
+        ----------
+        boolean
+        
+        Examples
+        ----------
         >>> Point(2,2).inBetween(Point(1,1),Point(4,4))
         True
         >>> Point(-2.3,4.3).inBetween(Point(0,3),Point(5,0))
@@ -53,10 +88,19 @@ class Point(object):
             return False
         
     def isEqual(self, other):
-        """
-        Function to assess whether two Point() objects are the same.
-        Inputs: two Point() objects
-        Output: boolean
+        """The function to assess whether two Point() objects are the same.
+        
+        Parameters
+        ----------
+        other : Point()
+          point with which the equality is checked.
+          
+        Returns
+        ----------
+        boolean
+        
+        Examples
+        ----------
         >>> p=Point(3,3)
         >>> q=Point(3,3)
         >>> p.isEqual(q)
@@ -72,43 +116,121 @@ class Point(object):
         
         
     def rotate(self,alpha):
-        """Rotation around the origin with alpha (deg)"""
+        """The function to rotate a Point around the origin with alpha (deg)
+        
+        Parameters
+        ----------
+        alpha : float
+          Rotation angle (in degrees)
+           
+        Returns
+        ----------
+        Point with rotated coordinates
+        
+        Examples
+        ----------
+        >>> Point(10,0).rotate(90)
+        Point(0.000, 10.000)
+        >>> Point(10,0).rotate(45)
+        Point(7.071, 7.071)
+        """
+        
         alpha=alpha*(np.pi/180.0)
         return Point(self.x*np.cos(alpha)-self.y*np.sin(alpha),self.y*np.cos(alpha)+self.x*np.sin(alpha))
         
     def translate(self,xt,yt):
+        """The function to translate a Point
+        
+        Parameters
+        ----------
+        xt : float
+          translation along x direction
+        yt : float
+          translation along y direction
+           
+        Returns
+        ----------
+        Point with translated coordinates
+        
+        Examples
+        ----------
+        >>> Point(10,0).translate(5,3)
+        Point(15.000, 3.000)
+        """
         return Point(self.x+xt,self.y+yt)
 
+
 class Segment(object):
+    """
+    A class used to represent a Segment.
+    
+    Parameters
+    ----------   
+    p : Point()
+      first end point of Segment
+    q : Point()
+      second end point of Segment
+      
+    Attributes
+    ----------
+    p : Point()
+      first end point of Segment
+    q : Point()
+      second end point of Segment
+    slope: float
+      slope of the line (np.Inf if vertical)
+    intercept: float
+      intercept on the y axis (intercept on the x axis if vertical)
+    points: list of Point()
+      list of p and q
+
+    """
     def __init__(self,P,Q):
-        """Segment() object is defined with the two end points (Point() objects).
-        Attributes:
-            p: first end point
-            q: second end point
-            slope: slope of the line (np.Inf if vertical)
-            intercept: intercept of the y axis (intercept of x axis if vertical)
-        """
         self.p=P
         self.q=Q
+        self._points=[P,Q]
         if abs(Q.x-P.x)<0.00001:
-            self.slope=np.Inf
-            self.intercept=Q.x
+            self._slope=np.Inf
+            self._intercept=Q.x
             #in this case the x coordinate is returned as the intercept!
             #the intersection functions will make use of this            
         else:
-            self.slope=(Q.y-P.y)/(Q.x-P.x)
-            self.intercept=P.y-self.slope*P.x
+            self._slope=(Q.y-P.y)/(Q.x-P.x)
+            self._intercept=P.y-self._slope*P.x
             
     def __repr__(self):
         return "Segment(Point(%.3f, %.3f),Point(%.3f, %.3f))" % (self.p.x, self.p.y,self.q.x, self.q.y)
-        
+    
+    @property
+    def slope(self):
+        return self._slope
+
+    @property
+    def intercept(self):
+        return self._intercept
+
+    @property
+    def points(self):
+        return self._points
+    
     def intersection(self,other):
-        """The function finds the intersection of two Segment objects.
-        Input: two Segment() objects
-        Output: a list of the intersection
+        """The function to find the intersection of two Segment objects.
+        
+        Parameters
+        ----------
+        other : Segment()
+           The Segment() for which the intersection is calculated
+           
+        Returns
+        ----------
+        a list of the intersection
+        
         The list has one element if the Segments intersect (even if only through
         their end points).
         An empty list is returned if the Segments do not have an intersection.
+        
+        Examples
+        ----------
         >>> s1=Segment(Point(2,2),Point(-2,-2))
         >>> s2=Segment(Point(-2,2),Point(2,-2))
         >>> s1.intersection(s2)
@@ -133,12 +255,39 @@ class Segment(object):
             return []
         
     def rotate(self,alpha):
-        """Rotation around the origin with alpha (deg)"""
+        """The function to rotate a Segment around the origin with alpha (deg)
+        
+        Parameters
+        ----------
+        alpha : float
+          Rotation angle (in degrees)
+           
+        Returns
+        ----------
+        Segment with rotated end points
+        """
         return Segment(self.p.rotate(alpha),self.q.rotate(alpha))
 
 class Circle(object):
+    """
+    A class used to represent a Circle.
+
+    Parameters
+    ----------   
+    c : Point()
+      center of Circle
+    r : float
+      radius of Circle
+    
+    Attributes
+    ----------   
+    c : Point()
+      center of Circle
+    r : float
+      radius of Circle
+    """
+
     def __init__(self, C, R):
-        '''Defines a Circle() object with its center (Point()) and radius'''
         self.c = C
         self.r = R
 
@@ -146,15 +295,26 @@ class Circle(object):
         return "Circle(C=(%.3f, %.3f),R=%.3f)" % (self.c.x, self.c.y,self.r)
 
     def intersection(self,seg):
-        """The function finds the intersections of a Segment with a Circle.
-        Input: Circle() and Segment() object
-        Output: intersections in a list.
+        """The function to find the intersection of a Circle with a Segment.
+        
+        Parameters
+        ----------
+        seg : Segment()
+          The Segment for which the intersection is calculated
+           
+        Returns
+        ----------
+        a list of the intersection
+
         The list has one element if one of the endpoints of the Segment is 
         enclosed by the circle.
         The list has two elements if both endpoints of the Segment lies outside
         the Circle and the Segment passes through the circle.
         An empty list is returned if the Segment does not pass through the Circle, 
         or in case the Segment is a tangent.
+        
+        Examples
+        ----------
         >>> c=Circle(Point(1,1),5)
         >>> s1=Segment(Point(-4,-8),Point(-4,10))
         >>> c.intersection(s1)
@@ -200,9 +360,22 @@ class Circle(object):
                 if inter2.inBetween(seg.p,seg.q):
                     inters.append(inter2)
                 return inters
+                        
 
     def encloses_point(self,P):
-        """Function to assess whether a point is enclosed by a Circle().
+        """The function to assess whether a point is enclosed by a Circle.
+        
+        Parameters
+        ---------- 
+        P : Point()
+          point to decide whether is enclosed by the Circle
+        
+        Returns
+        ----------
+        boolean
+        
+        Examples
+        ----------
         >>> c=Circle(Point(1,1),5)
         >>> P=Point(3,4)
         >>> c.encloses_point(P)
@@ -218,35 +391,103 @@ class Circle(object):
 
         
 class Rectangle(object):
+    """
+    A class used to represent a Rectangle. 
+    
+    Rectangles are actually general convex quadritlaterals.
+    To create a Rectangle, one should give the four corners in a clockwise or
+    counter-clockwise order
+    
+    Parameters
+    ----------
+    p1 : Point()
+      first corner
+    p2 : Point()
+      second corner
+    p3 : Point()
+      third corner
+    p4 : Point()
+      fourth corner
+    
+    Attributes
+    ----------   
+    p1 : Point()
+      first corner
+    p2 : Point()
+      second corner
+    p3 : Point()
+      third corner
+    p4 : Point()
+      fourth corner
+    p1p2 : Segment()
+      first side
+    p2p3 : Segment()
+      second side
+    p3p4 : Segment()
+      third side
+    p4p1 : Segment()
+      fourth side
+    corners : list of Point()
+      list of the corner points
+    sides : list of Segment()
+      list of the sides
+    """
     def __init__(self,P1,P2,P3,P4):
-        """Defines a Rectangle() object. In fact Rectangle() objects can be general
-        convex quadrilateral, the name was only omitted to avoid typos.
-        Rectangle() objects have to be defined with the four corners (Point() objects).
-        The corners have to be given either in a clockwise or counter-clockwise order.
-        Othervise ValueError is returned.
-        """
         self.p1=P1
         self.p2=P2
         self.p3=P3
         self.p4=P4
+        self._corners=[P1,P2,P3,P4]
         if Segment(P1,P3).intersection(Segment(P2,P4)) == []:
             raise ValueError('Corners defined in wrong order')
         else:
-            self.p1p2=Segment(P1,P2)
-            self.p2p3=Segment(P2,P3)
-            self.p3p4=Segment(P3,P4)
-            self.p4p1=Segment(P4,P1)
+            self._p1p2=Segment(P1,P2)
+            self._p2p3=Segment(P2,P3)
+            self._p3p4=Segment(P3,P4)
+            self._p4p1=Segment(P4,P1)
+            self._sides=[self._p1p2,self._p2p3,self._p3p4,self._p4p1]
         
     def __repr__(self):
         return "Rectangle(Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f),Point(%.3f, %.3f))" % (self.p1.x, self.p1.y, self.p2.x, self.p2.y, self.p3.x, self.p3.y, self.p4.x, self.p4.y)
-                
+
+    @property
+    def p1p2(self):
+        return self._p1p2    
+
+    @property
+    def p2p3(self):
+        return self._p2p3
+    
+    @property
+    def p3p4(self):
+        return self._p3p4
+    
+    @property
+    def p4p1(self):
+        return self._p4p1
+    
+    @property
+    def corners(self):
+        return self._corners
+    
+    @property
+    def sides(self):
+        return self._sides
+    
     def encloses_point(self,P):
-        """Function to assess whether a point is enclosed by a Rectangle().
-        In case of a rectangle ABCD and point P, the function computes the area
-        of triangles PAB, PBC, PCD and PDA with Heron's formula. Then it computes
-        the area of the rectangle by evaluating the areas of the triangles ABC
-        and ACD. If A_PAB+A_PBC+A_PCD+A_PDA>A_ABC+A_ACD then the function returns
-        False. Otherwise True is returned.
+        """ The function to assess whether a point is enclosed by a Rectangle().
+        
+        Parameters
+        ----------
+        P : Point()
+          point to decide whether is enclosed by Rectangle
+        
+        Returns
+        ----------
+        boolean
+        
+        Examples
+        ----------
         >>> rect=Rectangle(Point(3,7),Point(5,3),Point(13,5),Point(12,6))
         >>> P=Point(6,5)
         >>> rect.encloses_point(P)
@@ -255,6 +496,11 @@ class Rectangle(object):
         >>> rect.encloses_point(Q)
         False
         """
+        #In case of a rectangle ABCD and point P, the function computes the area
+        #of triangles PAB, PBC, PCD and PDA with Heron's formula. Then it computes
+        #the area of the rectangle by evaluating the areas of the triangles ABC
+        #and ACD. If A_PAB+A_PBC+A_PCD+A_PDA>A_ABC+A_ACD then the function returns
+        #False. Otherwise True is returned.
         a12=Point.distance(self.p1,P)
         b12=Point.distance(self.p2,P)
         c12=Point.distance(self.p1,self.p2)
@@ -301,23 +547,41 @@ class Rectangle(object):
             return False
 
     def rotate(self,alpha):
-        """Rotation of a Rectangle() around the origin with alpha (deg) by
-        rotating all corners of the Rectangle().
-            """
+        """The function to rotate a Rectangle around the origin with alpha (deg)
+        
+        Parameters
+        ----------
+        alpha : float
+          Rotation angle (in degrees)
+           
+        Returns
+        ----------
+        Rectangle() with rotated end points
+        """
         return Rectangle(self.p1.rotate(alpha),self.p2.rotate(alpha),self.p3.rotate(alpha),self.p4.rotate(alpha))
 
 
     def intersection(self,seg):
-        """Function to find the intersection of Rectangle() and Segment()
-        objects.
-        Input: Rectangle() and Segment() object
-        Output: intersections in a list.
+        """The function to find the intersection of a Rectangle with a Segment.
+        
+        Parameters
+        ----------
+        seg : Segment()
+          The Segment for which the intersection is calculated
+           
+        Returns
+        ----------
+        a list of the intersection
+
         The list has one element if one of the endpoints of the Segment is 
         enclosed by the rectangle.
         The list has two elements if both endpoints of the Segment lies outside
         the Rectangle, and the Segment passes through the Rectangle.
         An empty list is returned if the Segment does not pass through the Rectangle, 
         or in case the Segment passes through only one of the corners.
+        
+        Examples
+        ----------
         >>> rect=Rectangle(Point(-10,10),Point(10,10),Point(10,-10),Point(-10,-10))
         >>> s=Segment(Point(-30,-30),Point(30,30))
         >>> rect.intersection(s)
@@ -359,43 +623,3 @@ class Rectangle(object):
         else:
             raise ValueError('Seems to more than two intersection') #should never be reached, since we know it is not concave
                 
-
-#    def intersectionOld(self,seg):
-#        inters=[]
-#        inter12=seg.intersection(self.p1p2)
-#        if len(inter12)>0:
-#            inters.append(inter12[0])
-#        inter23=seg.intersection(self.p2p3)
-#        if len(inter23)>0:
-#            notPresent=True
-#            if inter23[0].isEqual(self.p2p3.p) or inter23[0].isEqual(self.p2p3.q): #if the segment passes through the vertex, it will be encountered twice.
-#                for inter in inters:                                               #no need to check for the first element
-#                    if inter.isEqual(inter23[0]):
-#                        notPresent=False
-#            if notPresent:
-#                inters.append(inter23[0])
-#        inter34=seg.intersection(self.p3p4)
-#        if len(inter34)>0:
-#            notPresent=True
-#            if inter34[0].isEqual(self.p3p4.p) or inter34[0].isEqual(self.p3p4.q): #if the segment passes through the vertex, it will be encountered twice.
-#                for inter in inters:
-#                    if inter.isEqual(inter34[0]):
-#                        notPresent=False
-#            if notPresent:
-#                inters.append(inter34[0])
-#        inter41=seg.intersection(self.p4p1)
-#        if len(inter41)>0:
-#            notPresent=True
-#            if inter41[0].isEqual(self.p4p1.p) or inter41[0].isEqual(self.p4p1.q): #if the segment passes through the vertex, it will be encountered twice.
-#                for inter in inters:                                               
-#                    if inter.isEqual(inter41[0]):
-#                        notPresent=False
-#            if notPresent:
-#                inters.append(inter41[0])
-#        
-#        if len(inters)>2:
-#            raise ValueError('seems to be an error, more than two intersections --> concave')
-#            #this should not happen, since in Rectangle() I check for concave case
-#        else:
-#            return inters
-#            
