@@ -44,27 +44,26 @@ alu=Material('9')
 alu.set_density(2.7)
 alu.set_path(('/dataFin/Al.dat',1))
 
-materials=Materials([uo2,he,zr,h2o,ss,air,lead,copper,alu])
+materials=Materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
 ###Pins
 
 fuel=Pin('1')
-fuel.add_region((0.41,'1'))  #todo i should be able to refer with variable name to the material
-fuel.add_region((0.42,'2'))
-fuel.add_region((0.48,'3'))
+fuel.add_region(uo2,0.41)
+fuel.add_region(he,0.42)
+fuel.add_region(zr,0.48)
 
 waterchannel=Pin('2')
-waterchannel.add_region((0.48,'4'))
 
 rodguide=Pin('3')
-rodguide.add_region((0.42,'4'))
-rodguide.add_region((0.48,'3'))
+rodguide.add_region(h2o,0.42)
+rodguide.add_region(zr,0.48)
 
-pins=Pins([fuel,rodguide])
+pins=Pins(fuel,rodguide)
 ###Assembly
 
 pwrOrig=Assembly(17,17)
 pwrOrig.set_pitch(1.26)
-pwrOrig._source=['1'] #to be fixed, add sourcePin or something like that!
+pwrOrig.set_source(uo2)
 pwrOrig.set_coolant('4')
 pwrOrig.set_surrounding('6')
 pwrOrig.set_pins(pins)
@@ -123,8 +122,8 @@ F5steel21mm.set_rectangle(Rectangle(Point(145.593, 202.162),Point(202.162, 145.5
 F5steel21mm.set_material('5')
 F5steel21mm.set_accommat('6')
 
-detectors=Detectors([F5,F15])
-absorbers=Absorbers([F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm])
+detectors=Detectors(F5,F15)
+absorbers=Absorbers(F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm)
                 
 elines=['0.4971',
  '0.563',
@@ -165,11 +164,16 @@ elines=['0.4971',
 pwrClab=Experiment()
 pwrClab.set_assembly(pwrOrig)
 pwrClab.set_elines(elines)
-pwrClab.set_output('testOOP.dat')
+pwrClab.set_output('testOOP8.dat')
 pwrClab.set_detectors(detectors)
 pwrClab.set_absorbers(absorbers)
 pwrClab.set_materials(materials)
+#start = time.time()
+#for _ in range(10):
 pwrClab.Run()
+#end = time.time()
+#print(end - start)
+
 plt.figure()
 plt.plot(pwrClab.elines,pwrClab._geomEff)
 plt.show()
