@@ -12,16 +12,16 @@ class Point(object):
     Parameters
     ----------   
     X : float
-      x coordinate of Point
+      x coordinate of Point in cm
     Y : float
-      y coordinate of Point
+      y coordinate of Point in cm
       
     Attributes
     ----------
     x : float
-      x coordinate of Point
+      x coordinate of Point in cm
     y : float
-      y coordinate of Point
+      y coordinate of Point in cm
     """
 
     def __init__(self, X, Y):
