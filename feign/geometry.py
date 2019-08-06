@@ -12,16 +12,16 @@ class Point(object):
     Parameters
     ----------   
     X : float
-      x coordinate of Point in cm
+        x coordinate of Point in cm
     Y : float
-      y coordinate of Point in cm
+        y coordinate of Point in cm
       
     Attributes
     ----------
     x : float
-      x coordinate of Point in cm
+        x coordinate of Point in cm
     y : float
-      y coordinate of Point in cm
+        y coordinate of Point in cm
     """
 
     def __init__(self, X, Y):
@@ -37,11 +37,12 @@ class Point(object):
         Parameters
         ----------
         other : Point()
-          the Point to which the distance is calculated
+            the Point to which the distance is calculated
           
         Returns
-        ----------
-        float, distance of two points
+        -------
+        float
+            distance of two points
         """
         dx = self.x - other.x
         dy = self.y - other.y
@@ -54,14 +55,15 @@ class Point(object):
         Parameters
         ----------
         p1,p2 : Point()
-          Points for which the test point is checked whether is placed in between.
+            Points for which the test point is checked whether is placed in between.
           
         Returns
-        ----------
-        boolean
+        -------
+        bool
+            True if the point is between p1 and p2, False otherwise
         
         Examples
-        ----------
+        --------
         >>> Point(2,2).inBetween(Point(1,1),Point(4,4))
         True
         >>> Point(-2.3,4.3).inBetween(Point(0,3),Point(5,0))
@@ -75,7 +77,6 @@ class Point(object):
         if abs(dxc*dyl-dyc*dxl)<=0.00001:
             if abs(dxl)>=abs(dyl): 
                 if dxl>0:
-#                    return p1.x <= self.x and self.x <= p2.x
                     return p1.x-self.x <= 0.00001 and self.x-p2.x <= 0.00001
                 else:
                     return p2.x-self.x <= 0.00001 and self.x-p1.x <= 0.00001
@@ -93,14 +94,15 @@ class Point(object):
         Parameters
         ----------
         other : Point()
-          point with which the equality is checked.
+            point with which the equality is checked.
           
         Returns
-        ----------
-        boolean
+        -------
+        bool
+            True if the points are equal, False otherwise
         
         Examples
-        ----------
+        --------
         >>> p=Point(3,3)
         >>> q=Point(3,3)
         >>> p.isEqual(q)
@@ -121,14 +123,15 @@ class Point(object):
         Parameters
         ----------
         alpha : float
-          Rotation angle (in degrees)
+            Rotation angle (in degrees)
            
         Returns
-        ----------
-        Point with rotated coordinates
+        -------
+        Point()
+            Point with rotated coordinates
         
         Examples
-        ----------
+        --------
         >>> Point(10,0).rotate(90)
         Point(0.000, 10.000)
         >>> Point(10,0).rotate(45)
@@ -144,16 +147,17 @@ class Point(object):
         Parameters
         ----------
         xt : float
-          translation along x direction
+            translation along x direction
         yt : float
-          translation along y direction
+            translation along y direction
            
         Returns
-        ----------
-        Point with translated coordinates
+        -------
+        Point() 
+            Point with translated coordinates
         
         Examples
-        ----------
+        --------
         >>> Point(10,0).translate(5,3)
         Point(15.000, 3.000)
         """
@@ -166,23 +170,23 @@ class Segment(object):
     
     Parameters
     ----------   
-    p : Point()
-      first end point of Segment
-    q : Point()
-      second end point of Segment
+    P : Point()
+        first end point of Segment
+    Q : Point()
+        second end point of Segment
       
     Attributes
     ----------
     p : Point()
-      first end point of Segment
+        first end point of Segment
     q : Point()
-      second end point of Segment
+        second end point of Segment
     slope: float
-      slope of the line (np.Inf if vertical)
+        slope of the line (np.Inf if vertical)
     intercept: float
-      intercept on the y axis (intercept on the x axis if vertical)
+        intercept on the y axis (intercept on the x axis if vertical)
     points: list of Point()
-      list of p and q
+        list of p and q
 
     """
     def __init__(self,P,Q):
@@ -219,18 +223,22 @@ class Segment(object):
         Parameters
         ----------
         other : Segment()
-           The Segment() for which the intersection is calculated
+            The Segment() for which the intersection is calculated
            
         Returns
-        ----------
-        a list of the intersection
+        -------
+        list of Point()
+            list of the intersections
         
+        Notes
+        -----
         The list has one element if the Segments intersect (even if only through
         their end points).
+        
         An empty list is returned if the Segments do not have an intersection.
         
         Examples
-        ----------
+        --------
         >>> s1=Segment(Point(2,2),Point(-2,-2))
         >>> s2=Segment(Point(-2,2),Point(2,-2))
         >>> s1.intersection(s2)
@@ -260,11 +268,12 @@ class Segment(object):
         Parameters
         ----------
         alpha : float
-          Rotation angle (in degrees)
+            Rotation angle (in degrees)
            
         Returns
-        ----------
-        Segment with rotated end points
+        -------
+        Segment()
+            Segment with rotated end points
         """
         return Segment(self.p.rotate(alpha),self.q.rotate(alpha))
 
@@ -274,17 +283,17 @@ class Circle(object):
 
     Parameters
     ----------   
-    c : Point()
-      center of Circle
-    r : float
-      radius of Circle
+    C : Point()
+        center of Circle
+    R : float
+        radius of Circle
     
     Attributes
     ----------   
     c : Point()
-      center of Circle
+        center of Circle
     r : float
-      radius of Circle
+        radius of Circle
     """
 
     def __init__(self, C, R):
@@ -300,21 +309,26 @@ class Circle(object):
         Parameters
         ----------
         seg : Segment()
-          The Segment for which the intersection is calculated
+            The Segment for which the intersection is calculated
            
         Returns
-        ----------
-        a list of the intersection
+        -------
+        list of Point()
+            list of the intersection
 
-        The list has one element if one of the endpoints of the Segment is 
+        Notes
+        -----
+        The returned list has one element if one of the endpoints of the Segment is 
         enclosed by the circle.
+        
         The list has two elements if both endpoints of the Segment lies outside
         the Circle and the Segment passes through the circle.
+        
         An empty list is returned if the Segment does not pass through the Circle, 
         or in case the Segment is a tangent.
         
         Examples
-        ----------
+        --------
         >>> c=Circle(Point(1,1),5)
         >>> s1=Segment(Point(-4,-8),Point(-4,10))
         >>> c.intersection(s1)
@@ -368,14 +382,15 @@ class Circle(object):
         Parameters
         ---------- 
         P : Point()
-          point to decide whether is enclosed by the Circle
+            point to decide whether is enclosed by the Circle
         
         Returns
-        ----------
-        boolean
+        -------
+        bool
+            True if P is enclosed by the Circle, False otherwise
         
         Examples
-        ----------
+        --------
         >>> c=Circle(Point(1,1),5)
         >>> P=Point(3,4)
         >>> c.encloses_point(P)
@@ -400,37 +415,42 @@ class Rectangle(object):
     
     Parameters
     ----------
-    p1 : Point()
-      first corner
-    p2 : Point()
-      second corner
-    p3 : Point()
-      third corner
-    p4 : Point()
-      fourth corner
+    P1 : Point()
+        first corner
+    P2 : Point()
+        second corner
+    P3 : Point()
+        third corner
+    P4 : Point()
+        fourth corner
     
     Attributes
     ----------   
     p1 : Point()
-      first corner
+        first corner
     p2 : Point()
-      second corner
+        second corner
     p3 : Point()
-      third corner
+        third corner
     p4 : Point()
-      fourth corner
+        fourth corner
     p1p2 : Segment()
-      first side
+        first side
     p2p3 : Segment()
-      second side
+        second side
     p3p4 : Segment()
-      third side
+        third side
     p4p1 : Segment()
-      fourth side
+        fourth side
     corners : list of Point()
-      list of the corner points
+        list of the corner points
     sides : list of Segment()
-      list of the sides
+        list of the sides
+        
+    Raises
+    ------
+    ValueError
+        if Corners are not defined in clockwise or counter-clockwise order.
     """
     def __init__(self,P1,P2,P3,P4):
         self.p1=P1
@@ -480,14 +500,15 @@ class Rectangle(object):
         Parameters
         ----------
         P : Point()
-          point to decide whether is enclosed by Rectangle
+            point to decide whether is enclosed by Rectangle
         
         Returns
-        ----------
-        boolean
+        -------
+        bool
+            True if the point is enclosed by the Rectangle, False otherwise. 
         
         Examples
-        ----------
+        --------
         >>> rect=Rectangle(Point(3,7),Point(5,3),Point(13,5),Point(12,6))
         >>> P=Point(6,5)
         >>> rect.encloses_point(P)
@@ -552,11 +573,12 @@ class Rectangle(object):
         Parameters
         ----------
         alpha : float
-          Rotation angle (in degrees)
+            Rotation angle (in degrees)
            
         Returns
-        ----------
-        Rectangle() with rotated end points
+        -------
+        Rectangle()
+            Rectangle with rotated end points
         """
         return Rectangle(self.p1.rotate(alpha),self.p2.rotate(alpha),self.p3.rotate(alpha),self.p4.rotate(alpha))
 
@@ -567,21 +589,27 @@ class Rectangle(object):
         Parameters
         ----------
         seg : Segment()
-          The Segment for which the intersection is calculated
+            The Segment for which the intersection is calculated
            
         Returns
-        ----------
-        a list of the intersection
+        -------
+        list of Point()
+            list of the intersections
+        
+        Notes
+        -----
 
         The list has one element if one of the endpoints of the Segment is 
         enclosed by the rectangle.
+        
         The list has two elements if both endpoints of the Segment lies outside
         the Rectangle, and the Segment passes through the Rectangle.
+        
         An empty list is returned if the Segment does not pass through the Rectangle, 
         or in case the Segment passes through only one of the corners.
         
         Examples
-        ----------
+        --------
         >>> rect=Rectangle(Point(-10,10),Point(10,10),Point(10,-10),Point(-10,-10))
         >>> s=Segment(Point(-30,-30),Point(30,30))
         >>> rect.intersection(s)
