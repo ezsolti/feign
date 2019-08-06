@@ -1530,7 +1530,7 @@ class Experiment(object):
                 errors.append(False)
 
         if self.absorbers is None:
-            self.set_absorbers(Absorbers())
+            self.set_absorbers()
             print('No absorbers in the problem')
         else:
             if self.absorbers is not None and False in [absorber.material in self.materials for absorber in self.absorbers.values()]:
