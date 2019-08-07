@@ -44,7 +44,7 @@ alu=Material('9')
 alu.set_density(2.7)
 alu.set_path(('/dataFin/Al.dat',1))
 
-materials=Materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
+#materials=Materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
 ###Pins
 
 fuel=Pin('1')
@@ -58,15 +58,14 @@ rodguide=Pin('3')
 rodguide.add_region(h2o,0.42)
 rodguide.add_region(zr,0.48)
 
-pins=Pins(fuel,rodguide)
 ###Assembly
 
 pwrOrig=Assembly(17,17)
 pwrOrig.set_pitch(1.26)
 pwrOrig.set_source(uo2)
-pwrOrig.set_coolant('4')
-pwrOrig.set_surrounding('6')
-pwrOrig.set_pins(pins)
+pwrOrig.set_coolant(h2o)
+pwrOrig.set_surrounding(air)
+pwrOrig.set_pins(fuel,rodguide)
 
 fuelmap= [['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'], 
           ['1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1', '1'], 
@@ -99,31 +98,35 @@ F15.set_location(Point(-174.726, -174.726))
 ###collimators could come here
 
 F5alu3mm=Absorber('F5alu3mm')
-F5alu3mm.set_rectangle(Rectangle(Point(145.805, 202.374),Point(202.374, 145.805),
+F5alu3mm.set_form(Rectangle(Point(145.805, 202.374),Point(202.374, 145.805),
                                            Point(202.162, 145.593),Point(145.593, 202.162)))
-F5alu3mm.set_material('9')
-F5alu3mm.set_accommat('6')
+F5alu3mm.set_material(alu)
+F5alu3mm.set_accommat(air)
 
 F5cooper1mm=Absorber('F5cooper1mm')
-F5cooper1mm.set_rectangle(Rectangle(Point(144.108, 200.677),Point(200.677, 144.108),
+F5cooper1mm.set_form(Rectangle(Point(144.108, 200.677),Point(200.677, 144.108),
                                            Point(200.606, 144.0376),Point(144.0376, 200.606)))
-F5cooper1mm.set_material('8')
-F5cooper1mm.set_accommat('6')
+F5cooper1mm.set_material(copper)
+F5cooper1mm.set_accommat(air)
 
 F5lead8mm=Absorber('F5lead8mm')
-F5lead8mm.set_rectangle(Rectangle(Point(146.37, 202.94),Point(202.94, 146.37),
+F5lead8mm.set_form(Rectangle(Point(146.37, 202.94),Point(202.94, 146.37),
                                            Point(202.374, 145.805),Point(145.805, 202.374)))
-F5lead8mm.set_material('7')
-F5lead8mm.set_accommat('6')
+F5lead8mm.set_material(lead)
+F5lead8mm.set_accommat(air)
 
 F5steel21mm=Absorber('F5steel21mm')
-F5steel21mm.set_rectangle(Rectangle(Point(145.593, 202.162),Point(202.162, 145.593),
+F5steel21mm.set_form(Rectangle(Point(145.593, 202.162),Point(202.162, 145.593),
                                            Point(200.677, 144.108),Point(144.108, 200.677)))
-F5steel21mm.set_material('5')
-F5steel21mm.set_accommat('6')
+F5steel21mm.set_material(ss)
+F5steel21mm.set_accommat(air)
 
-detectors=Detectors(F5,F15)
-absorbers=Absorbers(F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm)
+#F15steelcircle=Absorber('F15steelcircle')
+#F15steelcircle.set_form(Circle(Point(1.26, 0),1.0))
+#F15steelcircle.set_material(ss)
+#F15steelcircle.set_accommat(air)
+
+
                 
 elines=['0.4971',
  '0.563',
@@ -164,10 +167,10 @@ elines=['0.4971',
 pwrClab=Experiment()
 pwrClab.set_assembly(pwrOrig)
 pwrClab.set_elines(elines)
-pwrClab.set_output('testOOP8.dat')
-pwrClab.set_detectors(detectors)
-pwrClab.set_absorbers(absorbers)
-pwrClab.set_materials(materials)
+pwrClab.set_output('testOOP10-finalNoMatsAbsDetsPins.dat')
+pwrClab.set_detectors(F5,F15)
+pwrClab.set_absorbers(F5alu3mm,F5cooper1mm,F5lead8mm,F5steel21mm)
+pwrClab.set_materials(uo2,he,zr,h2o,ss,air,lead,copper,alu)
 #start = time.time()
 #for _ in range(10):
 pwrClab.Run()
@@ -183,3 +186,5 @@ plt.imshow(pwrClab._contributionMap['0.662'],cmap='jet')
 plt.title('Energy=0.662')
 plt.colorbar()
 plt.show()
+
+pwrClab.Plot(xl=[-200,200],yl=[-200,200])
