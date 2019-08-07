@@ -185,7 +185,7 @@ class Pin(object):
     regions : list of tuples
         (Material, radius) pairs to describe coaxial regions within pin.
     materials : list of str
-        list of matIDs within the pin
+        list of :attr:`Material.matID` identifiers within the pin
     radii : list of floats
         list of radii of regions within the pin
     """
@@ -283,7 +283,7 @@ class Assembly(object):
     surrounding : str (mandatory if pool is present)
         matID of the surrounding material (ie. material filled around pool)
     source : list of str
-        matIDs of material emitting gamma particles
+        :attr:`Material.matID` identifiers of material emitting gamma particles
     """
     def __init__(self,N,M):
         try:
@@ -493,7 +493,7 @@ class Assembly(object):
     def set_coolant(self, coolant=None):
         """The function to set the coolant material in the Assembly
         
-        Parameter
+        Parameters
         ----------
         coolant : Material()
             the coolant material
@@ -508,7 +508,7 @@ class Assembly(object):
     def set_surrounding(self, surrounding=None):
         """The function to set the surrounding material around the Assembly
         
-        Parameter
+        Parameters
         ----------
         surrounding : Material()
             the surrounding material
@@ -522,7 +522,7 @@ class Assembly(object):
     def set_source(self, *args):
         """The function to set the source material(s) in the Assembly
         
-        Parameter
+        Parameters
         ----------
         *args : Material() instances
             the source material(s)
@@ -559,10 +559,10 @@ class Assembly(object):
             - in case a pool is defined, it is checked whether the pool is 
               around the assembly.
            
-           Returns
-           -------
-           bool
-               True if everything is correct and complete, False otherwise
+        Returns
+        -------
+        bool
+            True if everything is correct and complete, False otherwise
            
         """
         if self.pins is None or self.pitch is None or \
@@ -647,7 +647,7 @@ class Detector(object):
     def set_location(self,location=None):
         """The function to set the location of Detector
         
-        Parameter
+        Parameters
         ----------
         location : Point()
             location of the Detector
@@ -660,7 +660,7 @@ class Detector(object):
     def set_collimator(self,collimator=None):
         """The function to set the Collimator of Detector
         
-        Parameter
+        Parameters
         ----------
         collimator : Collimator()
             Collimator between source and Detector
@@ -721,7 +721,7 @@ class Absorber(object):
     def set_form(self,form=None):
         """The function to set the shape of Absorber
         
-        Parameter
+        Parameters
         ----------
         form : Rectangle() or Circle()
             shape of the absorber
@@ -734,7 +734,7 @@ class Absorber(object):
     def set_material(self, material=None):
         """The function to set the material of Absorber
         
-        Parameter
+        Parameters
         ----------
         material : Material()
             Material the Absorber is made of
@@ -748,7 +748,7 @@ class Absorber(object):
     def set_accommat(self, accommat=None):
         """The function to set the accommodating material of Absorber
         
-        Parameter
+        Parameters
         ----------
         accommat : Material()
           Material the Absorber is surrounded with.
@@ -807,7 +807,7 @@ class Collimator(object):
         """The function to set the front of the Collimator.
         Intersecting front and back is not accepted.
         
-        Parameter
+        Parameters
         ----------
         front : Segment()
           Opening of the collimator slit
@@ -833,7 +833,7 @@ class Collimator(object):
         """The function to set the back of the Collimator.
         Intersecting front and back is not accepted.
         
-        Parameter
+        Parameters
         ----------
         back : Segment()
           Opening of the collimator slit
@@ -852,7 +852,7 @@ class Collimator(object):
     def set_color(self, color=None):
         """The function to set the color of the Collimator in case of plotting.
         
-        Parameter
+        Parameters
         ----------
         color : str
           color definition of Collimator in hex format.
@@ -872,28 +872,51 @@ class Experiment(object):
     ----------
     assembly : Assembly()
         The Assembly containing the source
-    pins : dictionary
+    pins : dict
         Dictionary containing the available pin types.
-    materials : dictionary
+    materials : dict
         Dictionary containing the available materials
-    detectors : dictionary
+    detectors : dict
         Dictionary containing the detectors in the problem
-    absorbers : dictionary, optional
+    absorbers : dict, optional
         Dictionary containing the absorbers in the problem
     elines : list of float, optional
         Energy lines (in MeV) at which the geometric efficiency is computed (in case missing,
         only the distance travelled in various material is computed)
-    mu : dictionary
+    mu : dict
         The total attenuation coefficients for all the energies in elines, and for
         each material in the problem.
-    dTmap : dictionary of dictionaries of 2D arrays
+    dTmap : dict of dictionaries of 2D arrays
         The distance travelled by a gamma ray from a lattice position to a detector
-        given for each material in the problem. Outer keys are detIDs, inner keys
-        are matIDs.
-    contributionMap : 
-    geomEff : 
-    output : str (optional)
+        given for each material in the problem. Outer keys are :attr:`Detector.detID` identifiers, 
+        inner keys are :attr:`Material.matID` identifiers.
+    contributionMap : dict
+        Dictionary to store the rod-wise contribution to each detector at each energy.
+        Outer keys are detector :attr:`Detector.detID` identifiers.
+        Inner keys are energy lines (as given in :meth:`Experiment.set_elines()`)
+        contributionMap[detID][eline] is an NxM shaped numpy array, where
+        N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    contributionMapAve : dict
+        Dictionary to store the rod-wise contribution averaged over all detectors at each energy.
+        Keys are energy lines (as given in :meth:`Experiment.set_elines()`)
+        contributionMapAve[eline] is an NxM shaped numpy array, where
+        N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    geomEff : dict
+        Dictionary to store the geometric efficiency at each detector location.
+        Keys are detector :attr:`Detector.detID` identifiers.
+        geomEff[detID] is E long numpy array, where E is the length of :attr:`Experiment.elines`
+    geomEffAve : numpy.ndarray
+        Geometric efficiency of the Experiment averaged over all detectors.
+        The length is of :attr:`Experiment.elines`
+    output : str, optional
       filename (and path) where to print the geometric efficiency
+    
+    Examples
+    --------
+    Examples of plotting attributes can be found at https://github.com/ezsolti/feign/blob/master/examples/ex1_2x2fuel.ipynb
+
+
+    
     
       
     """
@@ -909,6 +932,8 @@ class Experiment(object):
         self._dTmap=None
         self._contributionMap=None
         self._geomEff=None
+        self._contributionMapAve=None
+        self._geomEffAve=None
 
     def __repr__(self):
         return "Experiment()"
@@ -954,8 +979,16 @@ class Experiment(object):
         return self._contributionMap
     
     @property
+    def contributionMapAve(self):
+        return self._contributionMapAve
+    
+    @property
     def mu(self):
         return self._mu
+    
+    @property
+    def geomEffAve(self):
+        return self._geomEffAve
     
     @property
     def geomEff(self):
@@ -964,7 +997,7 @@ class Experiment(object):
     def set_output(self,output='output.dat'):
         """The function to set the output file for printing the geometric efficiency
         
-        Parameter
+        Parameters
         ----------
         output : str
           filename and path where to print the geometric efficiency.
@@ -1364,7 +1397,13 @@ class Experiment(object):
     def get_MuTable(self):
         """The function to create a nested dictionary to store the total 
         attenuation coefficients. 
-        Outer keys are energies as defined in elines, inner keys are matIDs
+        
+        Returns
+        -------
+        dict
+            Dictionary to store the attenuation coefficients.
+            Outer keys are energies as defined in :attr:`elines`, 
+            inner keys are :attr:`Material.matID` identifiers.
         """
         mu={e: {m: 0 for m in self.materials} for e in self._elines}
          
@@ -1478,7 +1517,7 @@ class Experiment(object):
                     for key in self.materials.keys():
                         contrib=contrib*math.exp(-1*mue[key]*dTmap[key][i][j])
                     contribmap[i][j]=contrib/(4*math.pi*(Point.distance(center,detector.location))**2)
-        return contribmap
+        return np.array(contribmap)
 
     def checkComplete(self):
         """Function to check whether everything is defined correctly in an 
@@ -1636,50 +1675,70 @@ class Experiment(object):
             raise ValueError('ERROR')
         dTmap={}
         for name in self.detectors:
-            print("Detector "+name+" is being calculated")
+            print("Distance travelled to detector "+name+" is being calculated")
             dTmap[name]=self.distanceTravelled(self.detectors[name]) 
         self._dTmap=dTmap
 
-        if self._elines is not None:  #TODO if i check this elsewhere, can be removed or NO, because in that case maybe just the distance travelled is of interest.      
-            geomefficiency=[]
-            contributionMapAve={}
+        sourceNorm=0
+        for i in range(self.assembly.N):
+            for j in range(self.assembly.M):
+                sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
+                if True in sourceIn:
+                    sourceNorm=sourceNorm+1
+
+        if self._elines is not None:  
+            geomefficiency={}
+            geomefficiencyAve=np.array([0 for _ in range(len(self._elines))])
+            contributionMapAve={e: np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]) for e in self._elines}
             self.get_MuTable()
             #TODO
-#            contributionMap={}
-#            for name in self.detectors:
-#                contributionMap[name]={}
-#                for e in self._elines:
-#                    mue=self._mu[e]
-#                    muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
-#                    contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name])
-#                    controbitonMapAve[e][i][j]=???
-            for e in self._elines:
-                print(e)
-                mue=self._mu[e]
-                muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
-                contributionMapAve[e]=[[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]
-                for name in self.detectors: #this could go through dTmap as well...:)
-                    contributionMap=self.attenuation(dTmap[name],muem,self.detectors[name])
-                    #contributionMapAve[e]=[[contributionMapAve[e][i][j]+contributionMap[i][j] for i in range(N)] for j in range(M)]
-                    for i in range(self.assembly.N):
-                        for j in range(self.assembly.M):
-                            contributionMapAve[e][i][j]=contributionMapAve[e][i][j]+contributionMap[i][j]/len(self.detectors)
-                counts=0
-                sourceNorm=0
-                for i in range(self.assembly.N):
-                    for j in range(self.assembly.M):
-                        sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
-                        if True in sourceIn:
-                            counts=counts+contributionMapAve[e][i][j]
-                            sourceNorm=sourceNorm+1
-                counts=counts/sourceNorm #TODO do i actually wanna normalize with the number of pins?
-                geomefficiency.append(counts) #TODO calc_geomEff(contribMapAve)???
+            contributionMap={}
+            for name in self.detectors:
+                print('Contribution to detector %s is calculated...'%(name))
+                contributionMap[name]={}
+                geomefficiency[name]=[0 for _ in range(len(self._elines))]
+                for e in self._elines:
+                    #contributionMapAve[e]=np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)])
+                    print('...for gamma energy %s MeV'%(e))
+                    mue=self._mu[e]
+                    muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
+                    contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name])
+                    contributionMapAve[e]=contributionMapAve[e]+contributionMap[name][e]/len(self.detectors)
+                #TODO SORT ELINES TO MAKE SURE IT IS RIGHT ORDER
+                geomefficiency[name]=np.array([np.sum(contribution) for contribution in contributionMap[name].values()])/sourceNorm
+                geomefficiencyAve=geomefficiencyAve+geomefficiency[name]/len(self.detectors)
+#
+#             
+#
+#            for e in self._elines:
+#                print(e)
+#                mue=self._mu[e]
+#                muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
+#                contributionMapAve[e]=[[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]
+#                for name in self.detectors: #this could go through dTmap as well...:)
+#                    contributionMap=self.attenuation(dTmap[name],muem,self.detectors[name])
+#                    contributionMapAve[e]=[[contributionMapAve[e][i][j]+contributionMap[i][j] for i in range(N)] for j in range(M)]
+#                    for i in range(self.assembly.N):
+#                        for j in range(self.assembly.M):
+#                            contributionMapAve[e][i][j]=contributionMapAve[e][i][j]+contributionMap[i][j]/len(self.detectors)
+#                counts=0
+#                sourceNorm=0
+#                for i in range(self.assembly.N):
+#                    for j in range(self.assembly.M):
+#                        sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
+#                        if True in sourceIn:
+#                            counts=counts+contributionMapAve[e][i][j]
+#                            sourceNorm=sourceNorm+1
+#                counts=counts/sourceNorm #TODO do i actually wanna normalize with the number of pins?
+#                geomefficiency.append(counts) #TODO calc_geomEff(contribMapAve)???
     
-            self._contributionMap=contributionMapAve
+            self._contributionMapAve=contributionMapAve
+            self._contributionMap=contributionMap
             self._geomEff=geomefficiency
+            self._geomEffAve=geomefficiencyAve
             if self.output is not None:
                 output=open(self.output,'w')
-                for e,c in zip(self._elines,self._geomEff):
+                for e,c in zip(self._elines,self._geomEffAve):
                     output.write(e+'\t'+str(c)+'\n')
                 output.close()
         
