@@ -183,11 +183,11 @@ class Pin(object):
     pinID : str
         ID of the pin
     regions : list of tuples
-        (Material, radius) pairs to describe coaxial regions within pin.
+        (Material, radius) pairs to describe coaxial regions within pin, radius in cm.
     materials : list of str
         list of :attr:`Material.matID` identifiers within the pin
     radii : list of floats
-        list of radii of regions within the pin
+        list of radii of regions within the pin, radii in cm
     """
     def __init__(self,pinID=None):
         self.pinID=pinID
@@ -270,7 +270,7 @@ class Assembly(object):
     M : int
         number of positions in x direction
     pitch : float
-        pitch size of the lattice
+        pitch size of the lattice in cm
     pins: Pins()
         pins in the assembly
     fuelmap: 2D array
@@ -1535,6 +1535,10 @@ class Experiment(object):
         """
         
         errors=[]
+        if self.materials is None:
+            print('ERROR: Materials are not defined')
+            return False #otherwise the following checks cannot be done.
+        
         if self.assembly is None:
             print('ERROR: Assembly is missing')
             errors.append(False)
@@ -1549,13 +1553,7 @@ class Experiment(object):
                 if False in [source in self.materials for source in self.assembly.source]:
                     print('ERROR: source material is not in Materials')
                     errors.append(False)
-                        
-        
-
-        if self.materials is None:
-            print('ERROR: Materials are not defined')
-            errors.append(False)
-            
+                                    
 
         if self.detectors is None:
             print('ERROR: no detector is defined.')
