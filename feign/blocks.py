@@ -7,9 +7,9 @@ Created on Mon Jul 22 11:12:45 2019
 """
 
 import os
-import numpy as np
 import math
 import re
+import numpy as np
 import matplotlib.pyplot as plt
 from feign.geometry import *
 
@@ -23,17 +23,17 @@ def isFloat(s):
 
 def readMu(path,column,energy):
     """The function to read attenuaton coefficients from XCOM datafiles.
-    
+
     Parameters
     ----------
     path : str
         path to the file (str)
     column : int
-        column which contains the total attenuation coefficients in case more 
+        column which contains the total attenuation coefficients in case more
         columns are present in the file
     energy : float or list of floats
         energy or energies where the attenuation coefficient is needed.
-     
+
     Returns
     -------
     float or list of floats
@@ -53,21 +53,21 @@ def readMu(path,column,energy):
     return np.interp(energy,en,mu)
 
 
-def is_hex_color(input_string): 
+def is_hex_color(input_string):
     """The function to assess whether a string is hex color description.
-    
+
     Taken from https://stackoverflow.com/questions/42876366/check-if-a-string-defines-a-color
-    
+
     Parameters
     ----------
     input_string : str
       String which may contain hex color description
-      
-    Returns 
+
+    Returns
     -------
     bool
       True if the string is a hex format definition, False otherwise.
-    
+
     Examples
     --------
     >>> is_hex_color('notahex')
@@ -81,15 +81,49 @@ def is_hex_color(input_string):
         return True
     return False
 
+def getID(nameKeyword, argList, keywordDict):
+    """The function returns 1 string argument from a general list or arguments
+
+    The argument can be named with nameKeyword
+
+    Parameters
+    ----------
+    nameKeyword : str
+      The keyword of the desired argument if named
+
+    argList : list
+      *args passed to this function
+
+    keywordDict : dict
+      **kwargs passed to this function
+
+    Returns
+    -------
+    str
+      The found string argument
+    """
+
+    foundArg = None
+
+    if len(argList) == 1 and len(keywordDict) == 0:
+        foundArg = argList[0]
+    elif len(argList) == 0 and len(keywordDict) == 1 and nameKeyword in keywordDict:
+        foundArg = keywordDict[nameKeyword]
+
+    if foundArg is not None and isinstance(foundArg, str):
+        return foundArg
+
+    raise ValueError('expected 1 argument: '+nameKeyword+' string')
+
 
 class Material(object):
     """A class used to represent a Material.
-    
+
     Parameters
     ----------
     matID : str
       ID of the material
-      
+
     Attributes
     ----------
     matID : str
@@ -101,69 +135,69 @@ class Material(object):
     color : str
         color of material when plotting
     """
-    def __init__(self, matID=None):
-        self.matID = matID
+
+    _idName = 'matID'
+
+    def __init__(self, *args, **kwargs):
         self._density = None
         self._path = None
         self._color = None
-        if matID is None or type(matID) is not str:
-            raise ValueError('matID has to be defined with a string')
+        self._id = getID(self._idName, args, kwargs)
 
     def __repr__(self):
-        return "Material(matID=%s)" % (self.matID)
+        return "Material(matID=%s)" % (self._id)
 
     @property
     def density(self):
         return self._density
-    
+
     @property
     def path(self):
         return self._path
-    
+
     @property
     def color(self):
         return self._color
 
     def set_density(self, density=None):
         """The function to set the density of the Material
-        
+
         Parameters
         ----------
         density : float
             density of material in g/cm2
         """
-        
+
         if isFloat(density):
             self._density=density
         else:
-            raise ValueError('density has to be float for Material ID="{}"'.format(self.matID))
-            
+            raise ValueError('density has to be float for Material ID="{}"'.format(self._id))
+
     def set_path(self, path=None):
         """The function to set the path to the attenuation data of the Material.
-        
+
         Parameters
         ----------
         path : tuple (str,int)
             the path of the file, and the column which contains the data.
         """
-        if type(path) is tuple and len(path)==2 and type(path[0]) is str and type(path[1]) is int:
+        if isinstance(path, tuple) and len(path)==2 and isinstance(path[0], str) and isinstance(path[1], int):
             self._path=path
         else:
-            raise ValueError(('Path has to be (str,int) tuple for Material ID="{}"'.format(self.matID)))
-            
+            raise ValueError(('Path has to be (str,int) tuple for Material ID="{}"'.format(self._id)))
+
     def set_color(self, color=None):
         """The function to set the color of Material in case the geometry is plotted.
-        
+
         Parameters
         ----------
         color : str
             color of the material in hex format
         """
-        if type(color) is str and is_hex_color(color):
+        if isinstance(color, str) and is_hex_color(color):
             self._color=color
         else:
-            raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self.matID)))
-            
+            raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self._id)))
 
 
 class Pin(object):
@@ -172,12 +206,12 @@ class Pin(object):
     the content (eg. fuel pellet, helium gap, clad).
     In case no region is added, the Pin() object will behave as an empty channel
     filled with the coolant material.
-    
+
     Parameters
     ----------
     pinID : str
         ID of the pin
-      
+
     Attributes
     ----------
     pinID : str
@@ -189,17 +223,18 @@ class Pin(object):
     radii : list of floats
         list of radii of regions within the pin, radii in cm
     """
-    def __init__(self,pinID=None):
-        self.pinID=pinID
+
+    _idName = 'pinID'
+
+    def __init__(self, *args, **kwargs):
         self._regions=[]
         self._materials=[]
         self._radii=[]
-        if pinID is None or type(pinID) is not str:
-            raise ValueError('pinID has to be defined')
-        
+        self._id = getID(self._idName, args, kwargs)
+
     def __repr__(self):
-        return "Pin(pinID=%s)" % (self.pinID)
-    
+        return "Pin(pinID=%s)" % (self._id)
+
     @property
     def regions(self):
         return self._regions
@@ -207,24 +242,24 @@ class Pin(object):
     @property
     def materials(self):
         return self._materials
-    
+
     @property
     def radii(self):
         return self._radii
-    
-    def add_region(self,material=None,radius=None): 
+
+    def add_region(self,material=None,radius=None):
         """The function to add coaxial circles and rings to a pin.
         In case of consecutive calls (ie. more regions added), the radii has to
         increase.
-        
+
         Parameters
         ----------
         material : Material
             material filled into new region
-        radius : 
+        radius :
             radius of new region
 
-        
+
         Examples
         --------
         >>> uo2 = Material('1')
@@ -240,29 +275,56 @@ class Pin(object):
          (Material(matID=3), 0.48)]
         """
         if isinstance(material,Material):
-            self._materials.append(material.matID)
+            self._materials.append(material._id)
         else:
             raise TypeError('Material() object is expected')
-            
+
         if isFloat(radius):
             if len(self._radii)>0 and self._radii[-1]>=radius:
-                raise ValueError('Radii are not increasing in pin #{}'.format(self.pinID))
+                raise ValueError('Radii are not increasing in pin #{}'.format(self._id))
             else:
                 self._radii.append(radius)
-        
-        self._regions.append((material,radius))        
 
+        self._regions.append((material,radius))
+
+
+def checkArgvConsistency(*argv):
+    if len(argv) >= 2:
+        for arg in argv[1:]:
+            if not isinstance(arg, type(argv[0])):
+                raise TypeError('Inconsistent input objects: '+str(type(arg))+' != '+str(type(argv[0])))
+
+def addIDsToDict(objectDict, *argv):
+    checkArgvConsistency(*argv)
+
+    #add new elements
+    for arg in argv:
+        if arg._id in objectDict:
+            raise ValueError('ID {} is duplicated'.format(arg._id))
+        else:
+            objectDict[arg._id]=arg
+
+def delIDsFromDict(objectDict, *argv):
+    checkArgvConsistency(*argv)
+
+    for arg in argv:
+        if objectDict is None:
+            raise TypeError('No objects added yet.')
+        elif arg._id in objectDict:
+            print('ID {} is not in dict yet'.format(arg._id))
+        else:
+            del objectDict[arg._id]
 
 class Assembly(object):
     """A class used to represent a rectangular Assembly.
-    
+
     Parameters
     ----------
     N : int
         number of positions in y direction
     M : int
         number of positions in x direction
-      
+
     Attributes
     ----------
     N : int
@@ -303,19 +365,19 @@ class Assembly(object):
 
     def __repr__(self):
         return "Assembly(N=%d,M=%d)" % (self.N,self.M)
-    
+
     @property
     def pitch(self):
         return self._pitch
-    
+
     @property
     def pool(self):
         return self._pool
-    
+
     @property
-    def pins(self):   
+    def pins(self):
         return self._pins
-    
+
     @property
     def fuelmap(self):
         return self._fuelmap
@@ -323,7 +385,7 @@ class Assembly(object):
     @property
     def coolant(self):
         return self._coolant
-    
+
     @property
     def surrounding(self):
         return self._surrounding
@@ -332,13 +394,12 @@ class Assembly(object):
     def source(self):
         return self._source
 
-    
     def set_pitch(self,pitch=None):
         """The function to set the pitch of the lattice of Assembly
-        
+
         Parameters
         ----------
-        pitch : float 
+        pitch : float
             pitch of lattice in cm
         """
         if isFloat(pitch):
@@ -348,50 +409,45 @@ class Assembly(object):
 
     def set_pins(self,*argv):
         """The function to include Pin objects in an Assembly
-        
+
         Parameters
         ----------
         *argv : Pin() or more Pin() objects
             Pin() objects to be included in the Assembly
-        
+
         Examples
         --------
         >>> fuel=Pin('1')
         >>> guide=Pin('2')
         >>> assembly=Assembly(2,2)
         >>> assembly.pins
-        
+
         >>> assembly.set_pins(fuel,guide)
         >>> assembly.pins
         {'1': Pin(pinID=1), '2': Pin(pinID=2)}
 
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Pin()
         ValueError
             if the Pin is already included
-        """        
+        """
+
         self._pins={}
-        for arg in argv:
-            if  not isinstance(arg,Pin):
-                raise TypeError('Inputs need to be Pin() objects')
-            elif arg.pinID in self._pins:
-                raise ValueError('pinID {} is duplicated'.format(arg.pinID))
-            else:
-                self._pins[arg.pinID]=arg
-    
+        self.add_pin(*argv)
+
     def add_pin(self,*argv):
-        """The function to add Pin objects to an Assembly, which may have 
+        """The function to add Pin objects to an Assembly, which may have
         already included pins. If one wants to rewrite the existing pins,
         then the :meth:`Assembly.set_pins()` has to be called.
-        
+
         Parameters
         ----------
         *argv : Pin() or more Pin() objects
             Pin() objects to be added in the Assembly
-        
+
         Examples
         --------
         >>> fuel=Pin('1')
@@ -404,33 +460,28 @@ class Assembly(object):
         >>> assembly.add_pin(guide)
         >>> assembly.pins
         {'1': Pin(pinID=1), '2': Pin(pinID=2)}
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Pin()
         ValueError
             if the Pin is already included
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Pin):
-                raise TypeError('Inputs need to be Pin() objects')
-            if self._pins is None:
-                self._pins={}
-            if arg.pinID in self._pins:
-                raise ValueError('pinID {} is duplicated'.format(arg.pinID))
-            else:
-                self._pins[arg.pinID]=arg
-                
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Pin):
+            raise TypeError('Inputs need to be Pin() objects')
+
+        addIDsToDict(self.pins, *argv)
+
     def remove_pin(self,*argv):
         """The function to remove Pin objects from an Assembly which
         already has previously included pins.
-        
+
         Parameters
         ----------
         *argv : Pin() or more Pin() objects
             Pin() objects to be added in the Assembly
-        
+
         Examples
         --------
         >>> fuel=Pin('1')
@@ -444,7 +495,7 @@ class Assembly(object):
         {'1': Pin(pinID=1)}
         >>> assembly.remove_pin(guide)
         You can remove only existing Pin()
-        
+
         Raises
         ------
         TypeError
@@ -453,26 +504,20 @@ class Assembly(object):
             if the Pin is already included
         TypeError
             if :attr:`pins` is None.
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Pin):
-                raise TypeError('Inputs need to be Pin() objects')
-            elif self._pins is None:
-                raise TypeError('No pins added yet. pins attribute is None.')
-            else:
-                try:
-                    del self._pins[arg.pinID]
-                except KeyError:
-                    print('You can remove only existing Pin()')
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Pin):
+            raise TypeError('Inputs need to be Pin() objects')
+
+        delIDsFromDict(self._pins, *argv)
 
     def set_fuelmap(self,fuelmap=None):
         """The function to set the fuelmap of the Assembly
-        
+
         Parameters
         ----------
         fuelmap : 2D array (NxM shape)
             fuelmap of the lattice
-          
+
         Example
         -------
         >>> fuel=Pin('1')
@@ -489,39 +534,36 @@ class Assembly(object):
             raise ValueError('Fuelmap has wrong size')
         else:
             self._fuelmap=fuelmap
-    
+
     def set_coolant(self, coolant=None):
         """The function to set the coolant material in the Assembly
-        
+
         Parameters
         ----------
         coolant : Material()
             the coolant material
         """
         if isinstance(coolant, Material):
-            self._coolant=coolant.matID
+            self._coolant=coolant._id
         else:
             raise TypeError('Material() is expected')
-            
 
-            
     def set_surrounding(self, surrounding=None):
         """The function to set the surrounding material around the Assembly
-        
+
         Parameters
         ----------
         surrounding : Material()
             the surrounding material
         """
         if isinstance(surrounding, Material):
-            self._surrounding=surrounding.matID
-        else: 
+            self._surrounding=surrounding._id
+        else:
             raise TypeError('Material() is expected')
-            
-            
+
     def set_source(self, *args):
         """The function to set the source material(s) in the Assembly
-        
+
         Parameters
         ----------
         *args : Material() instances
@@ -530,11 +572,11 @@ class Assembly(object):
         self._source=[]
         for arg in args:
             if isinstance(arg,Material):
-                self._source.append(arg.matID)
-            
+                self._source.append(arg._id)
+
     def set_pool(self,pool=None):
         """The function to set the pool around the Assembly
-        
+
         Parameters
         ----------
         pool : Rectangle()
@@ -544,44 +586,44 @@ class Assembly(object):
             self._pool=pool
         else:
             raise TypeError('Pool has to be a Rectangle() object')
-            
+
     def checkComplete(self):
         """
-        The function to check whether everything is defined correctly in an 
+        The function to check whether everything is defined correctly in an
         Assembly() object. Prints messages indicating any problem.
-           
-            - checks whether any attribute is not defined (pool does not need 
+
+            - checks whether any attribute is not defined (pool does not need
               to be defined)
-            - checks whether any pin contains any region with radius greater 
+            - checks whether any pin contains any region with radius greater
               than the pitch
-            - checks whether all the pins in the fuelmap are attributed to 
+            - checks whether all the pins in the fuelmap are attributed to
               the assembly
-            - in case a pool is defined, it is checked whether the pool is 
+            - in case a pool is defined, it is checked whether the pool is
               around the assembly.
-           
+
         Returns
         -------
         bool
             True if everything is correct and complete, False otherwise
-           
+
         """
         if self.pins is None or self.pitch is None or \
            self.coolant is None or self.fuelmap is None or \
-           self.source is None:                
+           self.source is None:
             print('ERROR: Assembly is not complete.')
             return False
-        else: 
+        else:
             if False in [r<=self.pitch/2 for pin in self.pins.values() for r in pin._radii]:
                 print('ERROR: in a Pin() a radius is greater than the pitch')
                 return False
-            
+
             if [] in [pin._radii for pin in self.pins.values()]:
                 print('Warning: a pin has no regions, considered as coolant channel')
-                
+
             if False in [self.fuelmap[i][j] in self.pins for i in range(self.N) for j in range(self.M)]:
                 print('ERROR: Assembly().fuelmap contains pin not included in Assembly.Pins()')
                 return False
-                
+
             if self.pool is None:
                 print('Warning: no pool in the problem, the surrounding of the Assembly is filled with coolant material')
                 self._surrounding=self._coolant
@@ -606,17 +648,16 @@ class Assembly(object):
                         print('ERROR: Assembly does not fit in pool')
                         return False
                     else:
-                        return True        
+                        return True
 
-            
 class Detector(object):
     """A class used to represent a Detector.
-    
+
     Parameters
     ----------
     detID : str
         ID of the detector
-      
+
     Attributes
     ----------
     detID : str
@@ -626,16 +667,17 @@ class Detector(object):
     collimator : Collimator(), optional
         Collimator placed between the source and the detector
     """
-    def __init__(self,detID=None):
-        self.detID=detID
+
+    _idName = 'detID'
+
+    def __init__(self, *args, **kwargs):
         self._location=None
         self._collimator=None
-        if detID is None:
-            raise ValueError('detID has to be defined')
-            
+        self._id = getID(self._idName, args, kwargs)
+
     def __repr__(self):
-        return "Detector(detID=%s)" % (self.detID)
-        
+        return "Detector(detID=%s)" % (self._id)
+
     @property
     def location(self):
         return self._location
@@ -643,10 +685,10 @@ class Detector(object):
     @property
     def collimator(self):
         return self._collimator
-    
+
     def set_location(self,location=None):
         """The function to set the location of Detector
-        
+
         Parameters
         ----------
         location : Point()
@@ -659,7 +701,7 @@ class Detector(object):
 
     def set_collimator(self,collimator=None):
         """The function to set the Collimator of Detector
-        
+
         Parameters
         ----------
         collimator : Collimator()
@@ -670,17 +712,16 @@ class Detector(object):
         else:
             raise TypeError('Collimator has to be Collimator() object')
 
-            
-class Absorber(object): 
+class Absorber(object):
     """A class used to represent an Absorber.
     An absorber can be thought of any element around (or within) the assembly,
     which attenuates gamma radiation.
-    
+
     Parameters
     ----------
     absID : str
         ID of the absorber
-      
+
     Attributes
     ----------
     absID : str
@@ -694,17 +735,17 @@ class Absorber(object):
         has no capabilities to decide which material is around the absorber, thus
         the user has to set this)
     """
-    def __init__(self,absID=None):
-        self.absID=absID
-        self._form=None  
+
+    _idName = 'absID'
+
+    def __init__(self, *args, **kwargs):
+        self._form=None
         self._material=None
         self._accommat=None
-        if absID is None:
-            raise ValueError('absID has to be defined')
-        
+        self._id = getID(self._idName, args, kwargs)
+
     def __repr__(self):
-        return "Absorber(absID=%s)" % (self.absID)
-        
+        return "Absorber(absID=%s)" % (self._id)
 
     @property
     def form(self):
@@ -720,7 +761,7 @@ class Absorber(object):
 
     def set_form(self,form=None):
         """The function to set the shape of Absorber
-        
+
         Parameters
         ----------
         form : Rectangle() or Circle()
@@ -730,47 +771,45 @@ class Absorber(object):
             self._form=form
         else:
             raise TypeError('Absorber has to be a Rectangle or Circle object')
-            
+
     def set_material(self, material=None):
         """The function to set the material of Absorber
-        
+
         Parameters
         ----------
         material : Material()
             Material the Absorber is made of
         """
         if isinstance(material, Material):
-            self._material=material.matID
+            self._material=material._id
         else:
             raise TypeError('Material() is expected')
 
-            
     def set_accommat(self, accommat=None):
         """The function to set the accommodating material of Absorber
-        
+
         Parameters
         ----------
         accommat : Material()
           Material the Absorber is surrounded with.
         """
         if isinstance(accommat, Material):
-            self._accommat=accommat.matID
+            self._accommat=accommat._id
         else:
             raise TypeError('Material() is expected')
-    
-    
+
 class Collimator(object):
     """A class used to represent a Collimator.
     Any gamma ray not passing through the Collimator will be rejected. Collimators
-    have an impact only if they are attributed to Detector objects with 
+    have an impact only if they are attributed to Detector objects with
     :meth:`Detector.set_collimator()`.
     The front and the back of the collimator cannot intersect.
-    
+
     Parameters
     ----------
     collID : str (optional)
       ID of the collimator
-      
+
     Attributes
     ----------
     collID : str (optional)
@@ -782,15 +821,18 @@ class Collimator(object):
     color : str
       color of the collimator in case of plotting the geometry.
     """
-    def __init__(self,collID=None):
-        self.collID=collID
+
+    idName = 'collID'
+
+    def __init__(self, *args, **kwargs):
         self._front=None
         self._back=None
         self._color=None
+        self._id = getID(self.idName, args, kwargs)
 
     def __repr__(self):
-        return "Collimator()" 
-        
+        return "Collimator()"
+
     @property
     def front(self):
         return self._front
@@ -798,20 +840,20 @@ class Collimator(object):
     @property
     def back(self):
         return self._back
-    
+
     @property
     def color(self):
         return self._color
-    
+
     def set_front(self,front=None):
         """The function to set the front of the Collimator.
         Intersecting front and back is not accepted.
-        
+
         Parameters
         ----------
         front : Segment()
           Opening of the collimator slit
-         
+
         Examples
         ----------
         >>> c1=Collimator()
@@ -823,16 +865,16 @@ class Collimator(object):
             if self._back is None:
                 self._front=front
             elif len(self._back.intersection(front))>0:
-                    return ValueError('Collimator back and front should not intersect')
+                return ValueError('Collimator back and front should not intersect')
             else:
                 self._front=front
         else:
             raise TypeError('Collimator front has to be a Segment object')
-    
+
     def set_back(self,back=None):
         """The function to set the back of the Collimator.
         Intersecting front and back is not accepted.
-        
+
         Parameters
         ----------
         back : Segment()
@@ -842,16 +884,16 @@ class Collimator(object):
             if self._front is None:
                 self._back=back
             elif len(self._front.intersection(back))>0:
-                    return ValueError('Collimator back and front should not intersect')
+                return ValueError('Collimator back and front should not intersect')
             else:
                 self._back=back
-            
+
         else:
             raise TypeError('Collimator back has to be a Segment object')
-            
+
     def set_color(self, color=None):
         """The function to set the color of the Collimator in case of plotting.
-        
+
         Parameters
         ----------
         color : str
@@ -860,14 +902,13 @@ class Collimator(object):
         if type(color) is str and is_hex_color(color):
             self._color=color
         else:
-            raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self.matID)))
+            raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self._id)))
 
-                        
 class Experiment(object):
     """A class used to represent an Experiment. An experiment is a complete passive
     gamma spectroscopy measurment setup with an assembly and detectors (absorbers
     and collimators are optional).
-      
+
     Attributes
     ----------
     assembly : Assembly()
@@ -888,7 +929,7 @@ class Experiment(object):
         each material in the problem.
     dTmap : dict of dictionaries of 2D arrays
         The distance travelled by a gamma ray from a lattice position to a detector
-        given for each material in the problem. Outer keys are :attr:`Detector.detID` identifiers, 
+        given for each material in the problem. Outer keys are :attr:`Detector.detID` identifiers,
         inner keys are :attr:`Material.matID` identifiers.
     contributionMap : dict
         Dictionary to store the rod-wise contribution to each detector at each energy.
@@ -910,15 +951,11 @@ class Experiment(object):
         The length is of :attr:`Experiment.elines`
     output : str, optional
       filename (and path) where to print the geometric efficiency
-    
+
     Examples
     --------
     Examples of plotting attributes can be found at https://github.com/ezsolti/feign/blob/master/examples/ex1_2x2fuel.ipynb
 
-
-    
-    
-      
     """
     def __init__(self):
         self._output=None
@@ -934,14 +971,15 @@ class Experiment(object):
         self._geomEff=None
         self._contributionMapAve=None
         self._geomEffAve=None
+        self._cells=None
 
     def __repr__(self):
         return "Experiment()"
-    
+
     @property
     def output(self):
         return self._output
-    
+
     @property
     def assembly(self):
         return self._assembly
@@ -957,7 +995,7 @@ class Experiment(object):
     @property
     def pins(self):
         return self._pins
-    
+
     @property
     def detectors(self):
         return self._detectors
@@ -973,86 +1011,79 @@ class Experiment(object):
     @property
     def dTmap(self):
         return self._dTmap
-    
+
     @property
     def contributionMap(self):
         return self._contributionMap
-    
+
     @property
     def contributionMapAve(self):
         return self._contributionMapAve
-    
+
     @property
     def mu(self):
         return self._mu
-    
+
     @property
     def geomEffAve(self):
         return self._geomEffAve
-    
+
     @property
     def geomEff(self):
         return self._geomEff
-    
+
     def set_output(self,output='output.dat'):
         """The function to set the output file for printing the geometric efficiency
-        
+
         Parameters
         ----------
         output : str
           filename and path where to print the geometric efficiency.
         """
-        if type(output) is str:
+        if isinstance(output, str):
             self._output=output
         else:
             raise TypeError('Output filename has to be str')
-    
+
     def set_materials(self,*argv):
         """The function to include Material objects in an Experiment
-        
+
         Parameters
         ----------
         *argv : Material() or more Material() objects
             Material() objects to be included in the Experiment
-        
+
         Examples
         --------
         >>> uox=Material('1')
         >>> zr=Material('2')
         >>> experiment=Experiment()
         >>> experiment.materials
-        
+
         >>> experiment.set_materials(uox,zr)
         >>> experiment.materials
         {'1': Material(matID=1), '2': Material(matID=2)}
 
-        
         Raises
         ------
         TypeError
             if the parameter is not Material()
         ValueError
             if the Material is already included
-        """        
+        """
         self._materials={}
-        for arg in argv:
-            if  not isinstance(arg,Material):
-                raise TypeError('Inputs need to be Material() objects')
-            elif arg.matID in self._materials:
-                raise ValueError('matID {} is duplicated'.format(arg.matID))
-            else:
-                self._materials[arg.matID]=arg
-    
+        self.add_material(*argv)
+
     def add_material(self,*argv):
-        """The function to add Material objects to an Experiment, which may have 
+        """The function to add Material objects to an Experiment, which may have
         already included materials. If one wants to rewrite the existing materials,
         then the :meth:`Experiment.set_materials()` has to be called.
-        
+
         Parameters
         ----------
         *argv : Material() or more Material() objects
             Material() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> uox=Material('1')
@@ -1065,33 +1096,28 @@ class Experiment(object):
         >>> experiment.add_material(zr)
         >>> experiment.materials
         {'1': Material(matID=1), '2': Material(matID=2)}
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Material()
         ValueError
             if the Material is already included
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Material):
-                raise TypeError('Inputs need to be Material() objects')
-            if self._materials is None:
-                self._materials={}
-            if arg.matID in self._materials:
-                raise ValueError('matID {} is duplicated'.format(arg.matID))
-            else:
-                self._materials[arg.matID]=arg
-                
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Material):
+            raise TypeError('Inputs need to be Material() objects')
+
+        addIDsToDict(self._materials, *argv)
+
     def remove_material(self,*argv):
         """The function to remove Material objects from an Experiment which
         already has previously included materials.
-        
+
         Parameters
         ----------
         *argv : Material() or more Material() objects
             Material() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> uox=Material('1')
@@ -1105,71 +1131,58 @@ class Experiment(object):
         {'1': Material(matID=1)}
         >>> experiment.remove_material(zr)
         You can remove only existing Material()
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Material()
         TypeError
             if :attr:`materials` is None.
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Material):
-                raise TypeError('Inputs need to be Material() objects')
-            elif self._materials is None:
-                raise TypeError('No materials added yet. materials attribute is None.')
-            else:
-                try:
-                    del self._materials[arg.matID]
-                except KeyError:
-                    print('You can remove only existing Material()')
-                
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Material):
+            raise TypeError('Inputs need to be Material() objects')
+
+        delIDsFromDict(self._materials, *argv)
+
     def set_absorbers(self,*argv):
         """The function to include Absorber objects in an Experiment
-        
+
         Parameters
         ----------
         *argv : Absorber() or more Absorber() objects
             Absorber() objects to be included in the Experiment
-        
+
         Examples
         --------
         >>> leadsheet=Absorber('leadsheet')
         >>> alusheet=Absorber('alusheet')
         >>> experiment=Experiment()
         >>> experiment.absorbers
-        
+
         >>> experiment.set_absorbers(leadsheet,alusheet)
         >>> experiment.absorbers
         {'leadsheet': Absorber(absID=leadsheet), 'alusheet': Absorber(absID=alusheet)}
 
-        
         Raises
         ------
         TypeError
             if the parameter is not Absorber()
         ValueError
             if the Absorber is already included
-        """        
+        """
         self._absorbers={}
-        for arg in argv:
-            if  not isinstance(arg,Absorber):
-                raise TypeError('Inputs need to be Absorber() objects')
-            elif arg.absID in self._absorbers:
-                raise ValueError('absID {} is duplicated'.format(arg.absID))
-            else:
-                self._absorbers[arg.absID]=arg
-    
+        self.add_absorber(*argv)
+
     def add_absorber(self,*argv):
-        """The function to add Absorber objects to an Experiment, which may have 
+        """The function to add Absorber objects to an Experiment, which may have
         already included absorbers. If one wants to rewrite the existing absorbers,
         then the :meth:`Experiment.set_absorbers()` has to be called.
-        
+
         Parameters
         ----------
         *argv : Absorber() or more Absorber() objects
             Absorber() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> leadsheet=Absorber('leadsheet')
@@ -1182,33 +1195,28 @@ class Experiment(object):
         >>> experiment.add_absorber(alusheet)
         >>> experiment.absorbers
         {'leadsheet': Absorber(absID=leadsheet), 'alusheet': Absorber(absID=alusheet)}
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Absorber()
         ValueError
             if the Absorber is already included
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Absorber):
-                raise TypeError('Inputs need to be Absorber() objects')
-            if self._absorbers is None:
-                self._absorbers={}
-            if arg.absID in self._absorbers:
-                raise ValueError('absID {} is duplicated'.format(arg.absID))
-            else:
-                self._absorbers[arg.absID]=arg
-                
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Absorber):
+            raise TypeError('Inputs need to be Absorber() objects')
+
+        addIDsToDict(self._absorbers, *argv)
+
     def remove_absorber(self,*argv):
         """The function to remove Absorber objects from an Experiment which
         already has previously included absorbers.
-        
+
         Parameters
         ----------
         *argv : Absorber() or more Absorber() objects
             Absorber() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> leadsheet=Absorber('leadsheet')
@@ -1222,71 +1230,58 @@ class Experiment(object):
         {'leadsheet': Absorber(absID=leadsheet)}
         >>> experiment.remove_absorber(alusheet)
         You can remove only existing Absorber()
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Absorber()
         TypeError
             if :attr:`absorbers` is None.
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Absorber):
-                raise TypeError('Inputs need to be Absorber() objects')
-            elif self._absorbers is None:
-                raise TypeError('No absorbers added yet. absorbers attribute is None.')
-            else:
-                try:
-                    del self._absorbers[arg.absID]
-                except KeyError:
-                    print('You can remove only existing Absorber()')
-    
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Absorber):
+            raise TypeError('Inputs need to be Absorber() objects')
+
+        delIDsFromDict(self._absorbers, *argv)
+
     def set_detectors(self,*argv):
         """The function to include Detector objects in an Experiment
-        
+
         Parameters
         ----------
         *argv : Detector() or more Detector() objects
             Detector() objects to be included in the Experiment
-        
+
         Examples
         --------
         >>> F5=Detector('F5')
         >>> F15=Detector('F15')
         >>> experiment=Experiment()
         >>> experiment.detectors
-        
+
         >>> experiment.set_detectors(F5,F15)
         >>> experiment.detectors
         {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
 
-        
         Raises
         ------
         TypeError
             if the parameter is not Detector()
         ValueError
             if the Detector is already included
-        """        
+        """
         self._detectors={}
-        for arg in argv:
-            if  not isinstance(arg,Detector):
-                raise TypeError('Inputs need to be Detector() objects')
-            elif arg.detID in self._detectors:
-                raise ValueError('detID {} is duplicated'.format(arg.detID))
-            else:
-                self._detectors[arg.detID]=arg
-    
+        self.add_detector(*argv)
+
     def add_detector(self,*argv):
-        """The function to add Detector objects to an Experiment, which may have 
+        """The function to add Detector objects to an Experiment, which may have
         already included detectors. If one wants to rewrite the existing detectors,
         then the :meth:`Experiment.set_detectors()` has to be called.
-        
+
         Parameters
         ----------
         *argv : Detector() or more Detector() objects
             Detector() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> F5=Detector('F5')
@@ -1299,33 +1294,28 @@ class Experiment(object):
         >>> experiment.add_detector(F15)
         >>> experiment.detectors
         {'F5': Detector(detID=F5), 'F15': Detector(detID=F15)}
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Detector()
         ValueError
             if the Detector is already included
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Detector):
-                raise TypeError('Inputs need to be Detector() objects')
-            if self._detectors is None:
-                self._detectors={}
-            if arg.detID in self._detectors:
-                raise ValueError('detID {} is duplicated'.format(arg.detID))
-            else:
-                self._detectors[arg.detID]=arg
-                
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Detector):
+            raise TypeError('Inputs need to be Detector() objects')
+
+        addIDsToDict(self._detectors, *argv)
+
     def remove_detector(self,*argv):
         """The function to remove Detector objects from an Experiment which
         already has previously included detectors.
-        
+
         Parameters
         ----------
         *argv : Detector() or more Detector() objects
             Detector() objects to be added in the Experiment
-        
+
         Examples
         --------
         >>> F5=Detector('F5')
@@ -1339,95 +1329,86 @@ class Experiment(object):
         {'F5': Detector(detID=F5)}
         >>> experiment.remove_detector(F15)
         You can remove only existing Detector()
-        
+
         Raises
         ------
         TypeError
             if the parameter is not Detector()
         TypeError
             if :attr:`detectors` is None.
-        """        
-        for arg in argv:
-            if  not isinstance(arg,Detector):
-                raise TypeError('Inputs need to be Detector() objects')
-            elif self._detectors is None:
-                raise TypeError('No detectors added yet. detectors attribute is None.')
-            else:
-                try:
-                    del self._detectors[arg.detID]
-                except KeyError:
-                    print('You can remove only existing Detector()')
-        
-        
+        """
+        if len(argv) > 0 and not isinstance(argv[0],Detector):
+            raise TypeError('Inputs need to be Detector() objects')
+
+        delIDsFromDict(self._detectors, *argv)
+
     def set_assembly(self,assembly=None):
         """The function to include Assembly in an Experiment
-        
+
         Parameters
         ----------
         assembly : Assembly()
             Assembly to be included in Experiment
         """
-    
+
         if isinstance(assembly,Assembly):
             self._assembly=assembly
             self._pins=self._assembly.pins
         else:
             raise ValueError('Assembly has to be an Assembly() object')
 
-
-            
     def set_elines(self,elines=None):
         """The function to set energy lines at which the geometric efficiency is
         calculated
-        
+
         Parameters
         ----------
         elines : list of str
             Energy lines (in MeV) at which the geometric efficiency is calculated.
-        
-        Note 
+
+        Note
         ----
         values of elines are strings, because they will be keys of :attr:`mu`
         """
-        if (type(elines) is list) and (False not in [type(e) is str for e in elines]) and (False not in [isFloat(e) for e in elines]):
+        if isinstance(elines, list) and (False not in [isinstance(e, str) for e in elines]) and (False not in [isFloat(e) for e in elines]):
             self._elines=elines
         else:
             raise ValueError('elines has to be a list of str MeV values')
-            
+
     def get_MuTable(self):
-        """The function to create a nested dictionary to store the total 
-        attenuation coefficients. 
-        
+        """The function to create a nested dictionary to store the total
+        attenuation coefficients.
+
         Returns
         -------
         dict
             Dictionary to store the attenuation coefficients.
-            Outer keys are energies as defined in :attr:`elines`, 
+            Outer keys are energies as defined in :attr:`elines`,
             inner keys are :attr:`Material.matID` identifiers.
         """
         mu={e: {m: 0 for m in self.materials} for e in self._elines}
-         
+
         for m in self.materials:
             mum=readMu(self.materials[m].path[0],self.materials[m].path[1],self.elines)
             for ei,mui in zip(self._elines,mum):
                 mu[ei][m]=mui
-                
+
         self._mu=mu
 #        OLD, nicer but more file reading.
 #        for e in self._elines:
 #            mu[e]={key: readMu(self.materials[key].path[0],self.materials[key].path[1],float(e)) for key in self.materials}
 #        self._mu=mu
 
-            
+
     def distanceTravelled(self,detector):
         """The function to calculate the distanced travelled in any material
-        by a gamma ray emitted from any pin positions of the Assembly to a detector 
-        
+        by a gamma ray emitted from any pin positions of the Assembly to a detector
+
         Parameters
         ----------
         detector : Detector()
         """
-        dTmap={key: [[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)] for key in self.materials}  
+        dTmap={key: [[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)] for key in self.materials}
         #create distance seen maps for each material
         p=self.assembly.pitch/2
         N=self.assembly.N
@@ -1435,50 +1416,50 @@ class Experiment(object):
         for i in range(N):
             for j in range(M):
                 sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
-                if True in sourceIn: 
+                if True in sourceIn:
                     dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
-                    
+
                     centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
                     segmentSourceDetector=Segment(centerSource,detector.location)
                     #Only track rays which pass through the collimator
-                    if detector.collimator==None or (len(detector.collimator.front.intersection(segmentSourceDetector))==1 and
+                    if detector.collimator is None or (len(detector.collimator.front.intersection(segmentSourceDetector))==1 and
                        len(detector.collimator.back.intersection(segmentSourceDetector))==1):
-                        
+
                        ###Distances traveled in other pin positions
                         for ii in range(N):
                             for jj in range(M):
                                 centerShield=Point(-p*(N-1)+jj*2*p,p*(N-1)-ii*2*p)
                                 pinChannel=Rectangle(centerShield.translate(-p,p),centerShield.translate(p,p),
                                                    centerShield.translate(p,-p),centerShield.translate(-p,-p))
-                                
+
                                 if len(pinChannel.intersection(segmentSourceDetector))>=1: #check only pins in between Source and Detector
                                     if ii==i and jj==j: #pinChannel.encloses_point(centerSource): #in that case, only one intersection
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials):
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
-                                            D=Point.distance(intersects[0],centerSource) 
+                                            D=Point.distance(intersects[0],centerSource)
                                             dT[mat]=dT[mat]+(D-Dprev)
                                             Dprev=D
                                     else:
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials):
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             if len(intersects)>1: #if len()==1, it is tangent, no distance traveled
                                                 D=Point.distance(intersects[0],intersects[1])
                                                 dT[mat]=dT[mat]+(D-Dprev)
-                                                Dprev=D                                        
-                                            
+                                                Dprev=D
+
                         ###Distance traveled outside the pool = distance of ray-pool intersect and detector
                         if self.assembly.pool is not None:
                             dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+Point.distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
-                        
+
                         ###Distance traveled in coolantMat = total source-detector distance - everything else
                         dT[self.assembly.coolant]=dT[self.assembly.coolant]+Point.distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
-                        
+
                         ###Distance traveled in absorbers
                         ###Absorber can be Circle() or Rectangular, the syntax
                         ###is the same regarding .intersection(), thus the code
-                        ###handles both as it is. 
+                        ###handles both as it is.
                         for absorber in self.absorbers.values():
                             intersects=absorber.form.intersection(segmentSourceDetector)
                             if len(intersects)>1:
@@ -1488,10 +1469,10 @@ class Experiment(object):
                                     dabs=Point.distance(intersects[0],detector.location)
                                 elif absorber.form.encloses_point(centerSource):
                                     dabs=Point.distance(intersects[0],centerSource)
-                                    print('Warning: absorber #%s is around source at %.2f,%.2f'%(absorber.absID,centerSource.x,centerSource.y))
+                                    print('Warning: absorber #%s is around source at %.2f,%.2f'%(absorber._id,centerSource.x,centerSource.y))
                                 else:
                                     raise ValueError('Ray has only one intersection with Absorber \n and the detector neither the source is enclosed by it.')
-                            else: 
+                            else:
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
                             dT[absorber.accommat]=dT[absorber.accommat]-dabs
@@ -1502,12 +1483,12 @@ class Experiment(object):
                         for key in dT:
                             dTmap[key][i][j]=np.Inf
         return dTmap
-    
+
     def attenuation(self,dTmap,mue,detector):
         contribmap=[[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]
         p=self.assembly.pitch/2
         N=self.assembly.N
-        M=self.assembly.M
+        #M=self.assembly.M
         for i in range(self.assembly.N):
             for j in range(self.assembly.M):
                 center=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
@@ -1520,25 +1501,25 @@ class Experiment(object):
         return np.array(contribmap)
 
     def checkComplete(self):
-        """Function to check whether everything is defined correctly in an 
+        """Function to check whether everything is defined correctly in an
            Experiment() object.
-           
+
            - checks whether assembly is complete
            - checks whether any pin contains any region with radius greater than the pitch
            - checks whether all the pins in the fuelmap are attributed to the assembly
            - in case a pool is defined, it is checked whether the pool is around the assembly.
-           
+
            Returns
            ----------
            bool
              True if everything is correct and complete, False otherwise
         """
-        
+
         errors=[]
         if self.materials is None:
             print('ERROR: Materials are not defined')
             return False #otherwise the following checks cannot be done.
-        
+
         if self.assembly is None:
             print('ERROR: Assembly is missing')
             errors.append(False)
@@ -1549,11 +1530,11 @@ class Experiment(object):
                 if False in [mat in self.materials for pin in self.pins.values() for mat in pin._materials]:
                     print('ERROR: pin material is missing from materials')
                     errors.append(False)
-    
+
                 if False in [source in self.materials for source in self.assembly.source]:
                     print('ERROR: source material is not in Materials')
                     errors.append(False)
-                                    
+
 
         if self.detectors is None:
             print('ERROR: no detector is defined.')
@@ -1572,7 +1553,7 @@ class Experiment(object):
         else:
             if self.absorbers is not None and False in [absorber.material in self.materials for absorber in self.absorbers.values()]:
                 print('ERROR: absorber material is missing from materials')
-                errors.append(False) 
+                errors.append(False)
             if self.absorbers is not None and False in [absorber.accommat in self.materials for absorber in self.absorbers.values()]:
                 print('ERROR: Absorber accommodating material is missing from materials')
                 errors.append(False)
@@ -1585,21 +1566,18 @@ class Experiment(object):
             if True in [mat.path is None for mat in self.materials.values()]:
                 print('ERROR: Path for attenuation file missing')
                 errors.append(False)
-            
 
-        
         if len(errors)==0:
             return True
         else:
             print('%d errors encountered.'%(len(errors)))
             return False
 
-    
     def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4):
         """Function to plot the geometry of an Experiment() object.
            The function will randomly set colors to Material() objects for which colors
            were previously not defined.
-           
+
            Parameters
            ----------
            out : str (default=None)
@@ -1615,13 +1593,12 @@ class Experiment(object):
         """
         if self.checkComplete() is False:
             raise ValueError('ERROR')
-            
+
         import random
-        import matplotlib.pyplot as plt        
         for mat in self.materials:
             if self.materials[mat].color is None:
                 self.materials[mat].set_color("#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
-        
+
         pool=self.assembly.pool
         N=self.assembly.N
         M=self.assembly.M
@@ -1636,7 +1613,7 @@ class Experiment(object):
         for i in range(N):
             for j in range(M):
                 center=[-p*(N-1)+j*2*p,p*(N-1)-i*2*p]
-                for r,m in zip(reversed(self.pins[self.assembly.fuelmap[i][j]]._radii),reversed(self.pins[self.assembly.fuelmap[i][j]]._materials)): 
+                for r,m in zip(reversed(self.pins[self.assembly.fuelmap[i][j]]._radii),reversed(self.pins[self.assembly.fuelmap[i][j]]._materials)):
                     circle1 = plt.Circle((center[0], center[1]), r, color=self.materials[m].color)
                     ax.add_artist(circle1)
         for a in self.absorbers:
@@ -1664,7 +1641,7 @@ class Experiment(object):
         if out is not None:
             plt.savefig(out,dpi=dpi)
         plt.show()
-     
+
     def Run(self):
         """The function to run an Experiment. It will update the dTmap, the
         contributionMap and the geomEff attributes.
@@ -1674,7 +1651,7 @@ class Experiment(object):
         dTmap={}
         for name in self.detectors:
             print("Distance travelled to detector "+name+" is being calculated")
-            dTmap[name]=self.distanceTravelled(self.detectors[name]) 
+            dTmap[name]=self.distanceTravelled(self.detectors[name])
         self._dTmap=dTmap
 
         sourceNorm=0
@@ -1684,7 +1661,7 @@ class Experiment(object):
                 if True in sourceIn:
                     sourceNorm=sourceNorm+1
 
-        if self._elines is not None:  
+        if self._elines is not None:
             geomefficiency={}
             geomefficiencyAve=np.array([0 for _ in range(len(self._elines))])
             contributionMapAve={e: np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]) for e in self._elines}
@@ -1706,7 +1683,7 @@ class Experiment(object):
                 geomefficiency[name]=np.array([np.sum(contribution) for contribution in contributionMap[name].values()])/sourceNorm
                 geomefficiencyAve=geomefficiencyAve+geomefficiency[name]/len(self.detectors)
 #
-#             
+#
 #
 #            for e in self._elines:
 #                print(e)
@@ -1729,7 +1706,7 @@ class Experiment(object):
 #                            sourceNorm=sourceNorm+1
 #                counts=counts/sourceNorm #TODO do i actually wanna normalize with the number of pins?
 #                geomefficiency.append(counts) #TODO calc_geomEff(contribMapAve)???
-    
+
             self._contributionMapAve=contributionMapAve
             self._contributionMap=contributionMap
             self._geomEff=geomefficiency
@@ -1739,8 +1716,5 @@ class Experiment(object):
                 for e,c in zip(self._elines,self._geomEffAve):
                     output.write(e+'\t'+str(c)+'\n')
                 output.close()
-        
-#        self._dTmap[detector.detID]=dTmap
-                            
 
-        
+#        self._dTmap[detector.detID]=dTmap

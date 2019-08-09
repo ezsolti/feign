@@ -5,7 +5,7 @@ zs. elter 2019
 """
 
 import unittest
-#from feign.geometry import *
+from feign.geometry import *
 
 class TestCircleIntersection(unittest.TestCase):
     def test_intersection_horizontal(self):
