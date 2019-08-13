@@ -4,6 +4,7 @@ FEIGNgeom
 """
 import math
 import numpy as np
+eps=1e-7
 
 class Point(object):
     """
@@ -74,17 +75,17 @@ class Point(object):
         dxl = p2.x - p1.x
         dyl = p2.y - p1.y
 
-        if abs(dxc*dyl-dyc*dxl)<=0.00001:
-            if abs(dxl)>=abs(dyl):
+        if abs(dxc*dyl-dyc*dxl)<=eps:
+            if abs(dxl)>=abs(dyl): 
                 if dxl>0:
-                    return p1.x-self.x <= 0.00001 and self.x-p2.x <= 0.00001
+                    return p1.x-self.x <= eps and self.x-p2.x <= eps
                 else:
-                    return p2.x-self.x <= 0.00001 and self.x-p1.x <= 0.00001
+                    return p2.x-self.x <= eps and self.x-p1.x <= eps
             else:
                 if dyl>0:
-                    return p1.y-self.y <= 0.00001 and self.y-p2.y <= 0.00001
+                    return p1.y-self.y <= eps and self.y-p2.y <= eps
                 else:
-                    return p2.y-self.y <= 0.00001 and self.y-p1.y <= 0.00001
+                    return p2.y-self.y <= eps and self.y-p1.y <= eps
         else:
             return False
 
@@ -111,7 +112,7 @@ class Point(object):
         >>> p.isEqual(a)
         False
         """
-        if abs(self.x-other.x)<0.00001 and abs(self.y-other.y)< 0.00001:
+        if abs(self.x-other.x)<eps and abs(self.y-other.y)<eps:
             return True
         else:
             return False
@@ -192,7 +193,7 @@ class Segment(object):
         self.p=P
         self.q=Q
         self._points=[P,Q]
-        if abs(Q.x-P.x)<0.00001:
+        if abs(Q.x-P.x)<eps:
             self._slope=np.Inf
             self._intercept=Q.x
             #in this case the x coordinate is returned as the intercept!
@@ -246,8 +247,7 @@ class Segment(object):
         >>> s1.intersection(s3)
          []
         """
-
-        if abs(self.slope-other.slope)<0.00001: #parallel
+        if abs(self.slope-other.slope)<eps: #parallel
             return []
         elif self.slope==np.Inf and other.slope!=np.Inf:
             inter=Point(self.intercept,other.slope*self.intercept+other.intercept)
@@ -358,7 +358,7 @@ class Circle(object):
             B=(2*(seg.intercept-self.c.y)*seg.slope-2*self.c.x)
             C=(self.c.x**2+(seg.intercept-self.c.y)**2-self.r**2)
             D = B**2-4*A*C
-            if D <= 0.00000001:
+            if D <= eps:
                 return []
             else:
                 x1 = (-B+math.sqrt(B**2-4*A*C))/(2*A)
@@ -397,7 +397,7 @@ class Circle(object):
         >>> c=Circle(Point(1,1),5)
         False
         """
-        if Point.distance(self.c,P)<self.r+0.0000001:
+        if Point.distance(self.c,P)<self.r+eps:
             return True
         else:
             return False
@@ -559,7 +559,7 @@ class Rectangle(object):
 
         Arect=A123+A134
 
-        if abs(Atris-Arect)<0.000001:
+        if abs(Atris-Arect)<eps:
             return True
         else:
             return False
@@ -636,7 +636,7 @@ class Rectangle(object):
             elif inters[1].isEqual(inters[2]):
                 return [inters[0],inters[1]]
             else:
-                raise ValueError('Seems to be three intersection')
+                raise ValueError('Seems to be three intersection.')
         elif len(inters)==4:
             if   inters[0].isEqual(inters[1]) and inters[2].isEqual(inters[3]):
                 return [inters[0], inters[2]]
