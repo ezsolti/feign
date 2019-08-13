@@ -927,28 +927,75 @@ class Experiment(object):
     mu : dict
         The total attenuation coefficients for all the energies in elines, and for
         each material in the problem.
-    dTmap : dict of dictionaries of 2D arrays
-        The distance travelled by a gamma ray from a lattice position to a detector
-        given for each material in the problem. Outer keys are :attr:`Detector.detID` identifiers,
-        inner keys are :attr:`Material.matID` identifiers.
+    sourcePoints : list
+        List of pin-wise source point locations for each random sample.
+    dTmap : dict of dictionaries of 2D numpy arrays
+        The average distance travelled by a gamma-ray from a lattice position to a detector
+        given for each material in the problem. Outer keys are :attr:`Detector._id` identifiers,
+        inner keys are :attr:`Material._id` identifiers. It is an average of all
+        random samples (which are kept track in :attr:`Experiment.dTmaps`)
+    dTmapErr : dict of dictionaries of 2D numpy arrays
+        The standard deviation of distance travelled by a gamma-ray from a lattice position to a detector
+        given for each material in the problem. Outer keys are :attr:`Detector._id` identifiers,
+        inner keys are :attr:`Material._id` identifiers. It is an standard deviation of all
+        random samples (which are kept track in :attr:`Experiment.dTmaps`)
+    dTmaps : list of dictionaries of 2D numpy arrays
+        All random samples of distance travelled by a gamma-ray from a lattice position
+        to a detector. Source point for each sample are stored in :attr:`Experiment.sourcePoints`
     contributionMap : dict
-        Dictionary to store the rod-wise contribution to each detector at each energy.
+        Dictionary to store the rod-wise contributions averaged over random samples
+        to each detector at each energy.
         Outer keys are detector :attr:`Detector.detID` identifiers.
         Inner keys are energy lines (as given in :meth:`Experiment.set_elines()`)
         contributionMap[detID][eline] is an NxM shaped numpy array, where
         N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    contributionMapErr : dict
+        Dictionary to store the standard deviation of rod-wise contributions averaged over
+        random samples to each detector at each energy.
+        Outer keys are detector :attr:`Detector.detID` identifiers.
+        Inner keys are energy lines (as given in :meth:`Experiment.set_elines()`)
+        contributionMapErr[detID][eline] is an NxM shaped numpy array, where
+        N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    contributionMaps : list
+        All random samples of contribution maps to each detector at each energy.
     contributionMapAve : dict
-        Dictionary to store the rod-wise contribution averaged over all detectors at each energy.
+        Dictionary to store the rod-wise contribution averaged over all detectors at each energy
+        averaged over all random samples.
         Keys are energy lines (as given in :meth:`Experiment.set_elines()`)
         contributionMapAve[eline] is an NxM shaped numpy array, where
         N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    contributionMapAveErr : dict
+        Dictionary to store the standard deviation of the pin-wise contribution averaged over
+        all detectors at each energy averaged over all random samples.
+        Keys are energy lines (as given in :meth:`Experiment.set_elines()`)
+        contributionMapAveErr[eline] is an NxM shaped numpy array, where
+        N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
+    contributionMapAves : list
+        All random samples of the pin-wise contribution averaged over
+        all detectors at each energy.
     geomEff : dict
-        Dictionary to store the geometric efficiency at each detector location.
-        Keys are detector :attr:`Detector.detID` identifiers.
+        Dictionary to store the geometric efficiency at each detector location averaged over
+        each random sample.
+        Keys are detector :attr:`Detector._id` identifiers.
         geomEff[detID] is E long numpy array, where E is the length of :attr:`Experiment.elines`
+    geomEffErr : dict
+        Dictionary to store the standard deviation of the geometric efficiency 
+        at each detector location averaged over each random sample.
+        Keys are detector :attr:`Detector._id` identifiers.
+        geomEff[detID] is E long numpy array, where E is the length of :attr:`Experiment.elines`
+    geomEffs : list
+        All random samples of the geometric efficiency at each detector location.
     geomEffAve : numpy.ndarray
-        Geometric efficiency of the Experiment averaged over all detectors.
+        Geometric efficiency of the Experiment averaged over all detectors averaged over each
+        random sample.
         The length is of :attr:`Experiment.elines`
+    geomEffAveErr : numpy.ndarray
+        Standard deviation of the geometric efficiency of the Experiment averaged over all 
+        detectors averaged over each random sample.
+        The length is of :attr:`Experiment.elines`
+    geomEffAves : list
+        All random samples of the geometric efficiency of the Experiment averaged over all 
+        detectors.
     output : str, optional
       filename (and path) where to print the geometric efficiency
 
@@ -966,12 +1013,23 @@ class Experiment(object):
         self._absorbers=None
         self._elines=None
         self._mu=None
+        self._sourcePoints=None
         self._dTmap=None
+        self._dTmapErr=None
+        self._dTmaps=None
         self._contributionMap=None
-        self._geomEff=None
+        self._contributionMapErr=None
+        self._contributionMaps=None
         self._contributionMapAve=None
+        self._contributionMapAveErr=None
+        self._contributionMapAves=None
+        self._geomEff=None
+        self._geomEffErr=None
+        self._geomEffs=None
         self._geomEffAve=None
-        self._cells=None
+        self._geomEffAveErr=None
+        self._geomEffAves=None
+        self._randomNum=1
 
     def __repr__(self):
         return "Experiment()"
@@ -983,10 +1041,6 @@ class Experiment(object):
     @property
     def assembly(self):
         return self._assembly
-
-    @property
-    def cells(self):
-        return self._cells
 
     @property
     def materials(self):
@@ -1013,24 +1067,81 @@ class Experiment(object):
         return self._dTmap
 
     @property
+    def dTmapErr(self):
+        return self._dTmapErr
+
+    @property
+    def dTmaps(self):
+        return self._dTmaps
+
+    @property
     def contributionMap(self):
         return self._contributionMap
+
+    @property
+    def contributionMapErr(self):
+        return self._contributionMapErr
+    
+    @property
+    def contributionMaps(self):
+        return self._contributionMaps
 
     @property
     def contributionMapAve(self):
         return self._contributionMapAve
 
     @property
+    def contributionMapAveErr(self):
+        return self._contributionMapAveErr
+
+    @property
+    def contributionMapAves(self):
+        return self._contributionMapAves
+    
+    @property
     def mu(self):
         return self._mu
 
     @property
-    def geomEffAve(self):
-        return self._geomEffAve
-
-    @property
     def geomEff(self):
         return self._geomEff
+
+    @property
+    def geomEffErr(self):
+        return self._geomEffErr
+
+    @property
+    def geomEffs(self):
+        return self._geomEffs
+    
+    @property
+    def geomEffAve(self):
+        return self._geomEffAve
+    
+    @property
+    def geomEffAveErr(self):
+        return self._geomEffAveErr
+    
+    @property
+    def geomEffAves(self):
+        return self._geomEffAves
+
+    @property
+    def randomNum(self):
+        return self._randomNum
+
+    def set_random(self,randomNum=1):
+        """The function to set number of random source locations per pin.
+
+        Parameters
+        ----------
+        randomNum : int
+          number of random source locations in each pin.
+        """
+        if isinstance(randomNum, int):
+            self._randomNum=randomNum
+        else:
+            raise TypeError('Has to be int')
 
     def set_output(self,output='output.dat'):
         """The function to set the output file for printing the geometric efficiency
@@ -1399,7 +1510,6 @@ class Experiment(object):
 #            mu[e]={key: readMu(self.materials[key].path[0],self.materials[key].path[1],float(e)) for key in self.materials}
 #        self._mu=mu
 
-
     def distanceTravelled(self,detector):
         """The function to calculate the distanced travelled in any material
         by a gamma ray emitted from any pin positions of the Assembly to a detector
@@ -1407,8 +1517,18 @@ class Experiment(object):
         Parameters
         ----------
         detector : Detector()
+        
+        Returns
+        -------
+        dTmap : dict
+            The travelled distance in various materials. Keys are material identifiers,
+            values are pin-wise distance values.
+        sourcePoint : numpy array
+            Pin-wise source location in the given calculation. 
         """
-        dTmap={key: [[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)] for key in self.materials}
+        dTmap={key: np.zeros((self.assembly.N,self.assembly.M)) for key in self.materials}
+        #sourcePoint=np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)])
+        sourcePoint=np.empty((self.assembly.N,self.assembly.M),dtype=object)
         #create distance seen maps for each material
         p=self.assembly.pitch/2
         N=self.assembly.N
@@ -1416,50 +1536,65 @@ class Experiment(object):
         for i in range(N):
             for j in range(M):
                 sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
-                if True in sourceIn:
-                    dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
+                if True in sourceIn:                     
 
-                    centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
+                    dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
+                    
+                    #TODO get a random number is the source material?!
+                    #if source is the inner most pin randomly center in circle
+                    #else: randomly in that and reject the things within
+                    if self.randomNum == 1:
+                        centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
+                    else:
+                        length = self.pins[self.assembly.fuelmap[i][j]]._radii[0]*np.sqrt(np.random.uniform(0, 1)) #TODO, if second ring is the source?
+                        angle = np.pi * np.random.uniform(0, 2)
+                        xnoise = length * np.cos(angle)
+                        ynoise = length * np.sin(angle)
+                        centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p).translate(xnoise,ynoise)                    
+                    sourcePoint[i][j]=centerSource
                     segmentSourceDetector=Segment(centerSource,detector.location)
                     #Only track rays which pass through the collimator
                     if detector.collimator is None or (len(detector.collimator.front.intersection(segmentSourceDetector))==1 and
                        len(detector.collimator.back.intersection(segmentSourceDetector))==1):
-
+                        
                        ###Distances traveled in other pin positions
                         for ii in range(N):
                             for jj in range(M):
                                 centerShield=Point(-p*(N-1)+jj*2*p,p*(N-1)-ii*2*p)
                                 pinChannel=Rectangle(centerShield.translate(-p,p),centerShield.translate(p,p),
                                                    centerShield.translate(p,-p),centerShield.translate(-p,-p))
-
+#                                    print('------')
+#                                    print(pinChannel)
+#                                    print(segmentSourceDetector)
+#                                    print('------')
                                 if len(pinChannel.intersection(segmentSourceDetector))>=1: #check only pins in between Source and Detector
                                     if ii==i and jj==j: #pinChannel.encloses_point(centerSource): #in that case, only one intersection
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials):
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
-                                            D=Point.distance(intersects[0],centerSource)
+                                            D=Point.distance(intersects[0],centerSource) 
                                             dT[mat]=dT[mat]+(D-Dprev)
                                             Dprev=D
                                     else:
                                         Dprev=0
-                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials):
+                                        for r,mat in zip(self.pins[self.assembly.fuelmap[ii][jj]]._radii, self.pins[self.assembly.fuelmap[ii][jj]]._materials): 
                                             intersects = Circle(centerShield,r).intersection(segmentSourceDetector)
                                             if len(intersects)>1: #if len()==1, it is tangent, no distance traveled
                                                 D=Point.distance(intersects[0],intersects[1])
                                                 dT[mat]=dT[mat]+(D-Dprev)
-                                                Dprev=D
-
+                                                Dprev=D                                        
+                                            
                         ###Distance traveled outside the pool = distance of ray-pool intersect and detector
                         if self.assembly.pool is not None:
                             dT[self.assembly.surrounding]=dT[self.assembly.surrounding]+Point.distance(self.assembly.pool.intersection(segmentSourceDetector)[0],detector.location)
-
+                        
                         ###Distance traveled in coolantMat = total source-detector distance - everything else
                         dT[self.assembly.coolant]=dT[self.assembly.coolant]+Point.distance(centerSource,detector.location)-sum([dT[k] for k in dT.keys()])  #in case there is a ring filled with the coolent, eg an empty control rod guide, we need keep that
-
+                        
                         ###Distance traveled in absorbers
                         ###Absorber can be Circle() or Rectangular, the syntax
                         ###is the same regarding .intersection(), thus the code
-                        ###handles both as it is.
+                        ###handles both as it is. 
                         for absorber in self.absorbers.values():
                             intersects=absorber.form.intersection(segmentSourceDetector)
                             if len(intersects)>1:
@@ -1472,7 +1607,7 @@ class Experiment(object):
                                     print('Warning: absorber #%s is around source at %.2f,%.2f'%(absorber._id,centerSource.x,centerSource.y))
                                 else:
                                     raise ValueError('Ray has only one intersection with Absorber \n and the detector neither the source is enclosed by it.')
-                            else:
+                            else: 
                                 dabs=0
                             dT[absorber.material]=dT[absorber.material]+dabs
                             dT[absorber.accommat]=dT[absorber.accommat]-dabs
@@ -1480,25 +1615,47 @@ class Experiment(object):
                         for key in dT:
                             dTmap[key][i][j]=dT[key]
                     else: #not through collimator
-                        for key in dT:
+                        for key in dT:  
                             dTmap[key][i][j]=np.Inf
-        return dTmap
+        
+        return dTmap, sourcePoint
 
-    def attenuation(self,dTmap,mue,detector):
-        contribmap=[[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]
+    def attenuation(self,dTmap,mue,detector,sourcePoint):
+        """The function to calculate the pin-wise contribution to the detector
+        at a given energy. That is the probablity that a gamma-ray emitted from 
+        a pin will reach the detector point.
+
+        Parameters
+        ----------
+        dTmap : dict
+            The travelled distance in various materials. Keys are material identifiers,
+            values are pin-wise distance values. Shape as created by :meth:`Experiment.distanceTravelled()`
+        mue : dict
+            Total attenuation coefficients at the given energy. Keys are materials,
+            values are the total attenuation coefficient values. 
+        detector : Detector()
+        sourcePoint : numpy array
+            Pin-wise source locations, as created by :meth:`Experiment.distanceTravelled()`.
+        
+        Returns
+        -------
+        contribmap : numpy array
+            Pin-wise probabilities that a gamma-ray emitted from a given pin hits the detector.
+        """
         p=self.assembly.pitch/2
         N=self.assembly.N
-        #M=self.assembly.M
-        for i in range(self.assembly.N):
-            for j in range(self.assembly.M):
-                center=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
+        M=self.assembly.M
+        contribmap=np.zeros((N,M))
+        for i in range(N):
+            for j in range(M):
+                center=sourcePoint[i][j]
                 sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
                 if True in sourceIn:
                     contrib=1 #TODO might be a place to include a pre-known emission weight map. Or to provide a function which multiplies the contribution with some weight matrix
                     for key in self.materials.keys():
                         contrib=contrib*math.exp(-1*mue[key]*dTmap[key][i][j])
                     contribmap[i][j]=contrib/(4*math.pi*(Point.distance(center,detector.location))**2)
-        return np.array(contribmap)
+        return contribmap
 
     def checkComplete(self):
         """Function to check whether everything is defined correctly in an
@@ -1648,73 +1805,119 @@ class Experiment(object):
         """
         if self.checkComplete() is False:
             raise ValueError('ERROR')
-        dTmap={}
-        for name in self.detectors:
-            print("Distance travelled to detector "+name+" is being calculated")
-            dTmap[name]=self.distanceTravelled(self.detectors[name])
-        self._dTmap=dTmap
-
+        
         sourceNorm=0
         for i in range(self.assembly.N):
             for j in range(self.assembly.M):
                 sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
                 if True in sourceIn:
                     sourceNorm=sourceNorm+1
-
-        if self._elines is not None:
-            geomefficiency={}
-            geomefficiencyAve=np.array([0 for _ in range(len(self._elines))])
-            contributionMapAve={e: np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]) for e in self._elines}
-            self.get_MuTable()
-            #TODO
-            contributionMap={}
+        dTmaps=[]
+        contributionMaps=[]
+        contributionMapAves=[]
+        geomefficiencies=[]
+        geomefficiencyAves=[]
+        sourcePoints=[]
+        for k in range(self.randomNum):
+            print('#%d is being calculated'%(k)) #TODO RUN-ba
+            dTmap={}
             for name in self.detectors:
-                print('Contribution to detector %s is calculated...'%(name))
-                contributionMap[name]={}
-                geomefficiency[name]=[0 for _ in range(len(self._elines))]
-                for e in self._elines:
-                    #contributionMapAve[e]=np.array([[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)])
-                    print('...for gamma energy %s MeV'%(e))
-                    mue=self._mu[e]
-                    muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
-                    contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name])
-                    contributionMapAve[e]=contributionMapAve[e]+contributionMap[name][e]/len(self.detectors)
-                #TODO SORT ELINES TO MAKE SURE IT IS RIGHT ORDER
-                geomefficiency[name]=np.array([np.sum(contribution) for contribution in contributionMap[name].values()])/sourceNorm
-                geomefficiencyAve=geomefficiencyAve+geomefficiency[name]/len(self.detectors)
-#
-#
-#
-#            for e in self._elines:
-#                print(e)
-#                mue=self._mu[e]
-#                muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
-#                contributionMapAve[e]=[[0 for i in range(self.assembly.N)] for j in range(self.assembly.M)]
-#                for name in self.detectors: #this could go through dTmap as well...:)
-#                    contributionMap=self.attenuation(dTmap[name],muem,self.detectors[name])
-#                    contributionMapAve[e]=[[contributionMapAve[e][i][j]+contributionMap[i][j] for i in range(N)] for j in range(M)]
-#                    for i in range(self.assembly.N):
-#                        for j in range(self.assembly.M):
-#                            contributionMapAve[e][i][j]=contributionMapAve[e][i][j]+contributionMap[i][j]/len(self.detectors)
-#                counts=0
-#                sourceNorm=0
-#                for i in range(self.assembly.N):
-#                    for j in range(self.assembly.M):
-#                        sourceIn=[s in self.pins[self.assembly.fuelmap[i][j]]._materials for s in self.assembly.source]
-#                        if True in sourceIn:
-#                            counts=counts+contributionMapAve[e][i][j]
-#                            sourceNorm=sourceNorm+1
-#                counts=counts/sourceNorm #TODO do i actually wanna normalize with the number of pins?
-#                geomefficiency.append(counts) #TODO calc_geomEff(contribMapAve)???
-
-            self._contributionMapAve=contributionMapAve
+                print("Distance travelled to detector "+name+" is being calculated")
+                dTmap[name],sourcePoint=self.distanceTravelled(self.detectors[name]) 
+            dTmaps.append(dTmap)
+            sourcePoints.append(sourcePoint)    
+            if self._elines is not None:
+                if k==0:
+                    self.get_MuTable()
+                geomefficiency={}
+                geomefficiencyAve=np.zeros(len(self._elines))
+                contributionMapAve={e: np.zeros((self.assembly.N,self.assembly.M)) for e in self._elines}
+                contributionMap={}
+                for name in self.detectors:
+                    print('Contribution to detector %s is calculated...'%(name))
+                    contributionMap[name]={}
+                    geomefficiency[name]=np.zeros(len(self._elines))
+                    for e in self._elines:
+                        print('...for gamma energy %s MeV'%(e))
+                        mue=self._mu[e]
+                        muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
+                        contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name],sourcePoint)
+                        contributionMapAve[e]=contributionMapAve[e]+contributionMap[name][e]/len(self.detectors)
+                    geomefficiency[name]=np.array([np.sum(contribution) for contribution in contributionMap[name].values()])/sourceNorm
+                    geomefficiencyAve=geomefficiencyAve+geomefficiency[name]/len(self.detectors)
+                contributionMaps.append(contributionMap)
+                contributionMapAves.append(contributionMapAve)
+                geomefficiencies.append(geomefficiency)
+                geomefficiencyAves.append(geomefficiencyAve)            
+        self._sourcePoints=sourcePoints
+        #Various Numpy manipulations to restructure the "plural" lists containing data for
+        #each random sample. Then the mean and the std of the "plural" lists is calculated.
+        
+        #restructuring dTmaps: from the list of dictionaries, make a dictionary of lists
+        #then take the mean and std of the maps in the inner list
+        dTmapsRe={det: {mat: [dmap[det][mat] for dmap in dTmaps] for mat in self.materials} for det in self.detectors}
+        dTmap={} #will be the average
+        dTmapErr={} #will be the std
+        for det in dTmapsRe:
+            dTmap[det]={}
+            dTmapErr[det]={}
+            for mat in dTmapsRe[det]:
+                dTmapToAve=np.array([np.ravel(dT) for dT in dTmapsRe[det][mat]])
+                dTmap[det][mat]=np.mean(dTmapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+                dTmapErr[det][mat]=np.std(dTmapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+        self._dTmap=dTmap
+        self._dTmapErr=dTmapErr
+        self._dTmaps=dTmaps
+         
+        if self._elines is not None:  
+            #restructuring contributionMaps
+            contributionMapsRe={det: {e: [cmap[det][e] for cmap in contributionMaps] for e in self._elines} for det in self.detectors}
+            contributionMap={} #will be the average
+            contributionMapErr={} #will be the stdcontributionMapAves
+            for det in contributionMapsRe:
+                contributionMap[det]={}
+                contributionMapErr[det]={}
+                for e in contributionMapsRe[det]:
+                    cMapToAve=np.array([np.ravel(cm) for cm in contributionMapsRe[det][e]])
+                    contributionMap[det][e]=np.mean(cMapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+                    contributionMapErr[det][e]=np.std(cMapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
             self._contributionMap=contributionMap
+            self._contributionMapErr=contributionMapErr
+            self._contributionMaps=contributionMaps
+            
+            #restructuring contributionMapAves
+            contributionMapAvesRe={e: [cmap[e] for cmap in contributionMapAves] for e in self._elines}
+            contributionMapAve={} #will be the average
+            contributionMapAveErr={} #will be the std
+            for e in contributionMapAvesRe:
+                cMapToAve=np.array([np.ravel(cm) for cm in contributionMapAvesRe[e]])
+                contributionMapAve[e]=np.mean(cMapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+                contributionMapAveErr[e]=np.std(cMapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+            self._contributionMapAve=contributionMapAve
+            self._contributionMapAveErr=contributionMapAveErr
+            self._contributionMapAves=contributionMapAves
+   
+            #restructuring geomefficiencies
+            geomefficienciesRe={det: [geff[det] for geff in geomefficiencies] for det in self._detectors}
+            geomefficiency={} #will be the average
+            geomefficiencyErr={} #will be the std
+            for det in geomefficienciesRe:
+                geffToAve=np.array([geff for geff in geomefficienciesRe[det]])
+                geomefficiency[det]=np.mean(geffToAve,axis=0)
+                geomefficiencyErr[det]=np.std(geffToAve,axis=0)
             self._geomEff=geomefficiency
+            self._geomEffErr=geomefficiencyErr
+            self._geomEffs=geomefficiencies
+            
+            #restructuring geomefficiencyAves
+            geomefficiencyAve=np.mean(np.array([geff for geff in geomefficiencyAves]),axis=0)
+            geomefficiencyAveErr=np.std(np.array([geff for geff in geomefficiencyAves]),axis=0)
             self._geomEffAve=geomefficiencyAve
+            self._geomEffAveErr=geomefficiencyAveErr
+            self._geomEffAves=geomefficiencyAves
+            
             if self.output is not None:
                 output=open(self.output,'w')
                 for e,c in zip(self._elines,self._geomEffAve):
                     output.write(e+'\t'+str(c)+'\n')
                 output.close()
-
-#        self._dTmap[detector.detID]=dTmap
