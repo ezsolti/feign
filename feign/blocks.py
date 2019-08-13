@@ -1063,6 +1063,11 @@ class Experiment(object):
     def elines(self):
         return np.array(self._elines).astype(float) #TODO, i want the strings for later, but for plotting float is better. Is this a correct way to do it?
                                                     #probably not because I may want the strings in processing as well. but this can be done while processing
+
+    @property
+    def sourcePoints(self):
+        return self._sourcePoints
+
     @property
     def dTmap(self):
         return self._dTmap
@@ -1545,13 +1550,13 @@ class Experiment(object):
                     #if source is the inner most pin randomly center in circle
                     #else: randomly in that and reject the things within
                     if self.randomNum == 1:
-                        centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p)
+                        centerSource=Point(-p*(M-1)+j*2*p,p*(N-1)-i*2*p)
                     else:
                         length = self.pins[self.assembly.fuelmap[i][j]]._radii[0]*np.sqrt(np.random.uniform(0, 1)) #TODO, if second ring is the source?
                         angle = np.pi * np.random.uniform(0, 2)
                         xnoise = length * np.cos(angle)
                         ynoise = length * np.sin(angle)
-                        centerSource=Point(-p*(N-1)+j*2*p,p*(N-1)-i*2*p).translate(xnoise,ynoise)                    
+                        centerSource=Point(-p*(M-1)+j*2*p,p*(N-1)-i*2*p).translate(xnoise,ynoise)                    
                     sourcePoint[i][j]=centerSource
                     segmentSourceDetector=Segment(centerSource,detector.location)
                     #Only track rays which pass through the collimator
@@ -1561,7 +1566,7 @@ class Experiment(object):
                        ###Distances traveled in other pin positions
                         for ii in range(N):
                             for jj in range(M):
-                                centerShield=Point(-p*(N-1)+jj*2*p,p*(N-1)-ii*2*p)
+                                centerShield=Point(-p*(M-1)+jj*2*p,p*(N-1)-ii*2*p)
                                 pinChannel=Rectangle(centerShield.translate(-p,p),centerShield.translate(p,p),
                                                    centerShield.translate(p,-p),centerShield.translate(-p,-p))
 #                                    print('------')
@@ -1770,7 +1775,7 @@ class Experiment(object):
         #fuelmap
         for i in range(N):
             for j in range(M):
-                center=[-p*(N-1)+j*2*p,p*(N-1)-i*2*p]
+                center=[-p*(M-1)+j*2*p,p*(N-1)-i*2*p]
                 for r,m in zip(reversed(self.pins[self.assembly.fuelmap[i][j]]._radii),reversed(self.pins[self.assembly.fuelmap[i][j]]._materials)):
                     circle1 = plt.Circle((center[0], center[1]), r, color=self.materials[m].color)
                     ax.add_artist(circle1)
