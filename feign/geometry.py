@@ -639,17 +639,7 @@ class Rectangle(object):
             elif inters[1].isEqual(inters[2]):
                 return [inters[0],inters[1]]
             else:
-                print(self)
-                print(seg)
-                print(self.p1)
-                print(self.p2)
-                print(self.p3)
-                print(self.p4)
-                print(seg.p)
-                print(seg.q)
-                import code
-                code.interact(local=dict(globals(), **locals()))
-                raise ValueError('Seems to be three intersection')
+                raise ValueError('Seems to be three intersection.')
         elif len(inters)==4:
             if   inters[0].isEqual(inters[1]) and inters[2].isEqual(inters[3]):
                 return [inters[0], inters[2]]
