@@ -184,7 +184,7 @@ class TestExperimentCheckComplete(unittest.TestCase):
         pwrClab.set_elines(elines)
         F5b=Detector('F5b')
         F5b.set_location(Point(174.726, 174.726))
-        coll=Collimator()
+        coll=Collimator('1')
         coll.set_back(Segment(Point(125.0,-11.6),Point(125.0,11.6)).rotate(45))
         F5b.set_collimator(coll)
         pwrClab.set_detectors(F5b,F15)

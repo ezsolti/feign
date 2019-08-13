@@ -11,6 +11,13 @@ authors:
 affiliations:
  - name: Uppsala University, Division of Applied Nuclear Physics
    index: 1
+authors:
+ - name: Aron Cserkaszky
+	orcid: 0000-0001-5708-9999
+   affiliation: 1
+affiliations:
+ - name: Pazmany Peter Catholic University, Faculty of Information Technology
+   index: 1
 date: 10 August 2019
 bibliography: paper.bib
 ---
