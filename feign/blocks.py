@@ -612,43 +612,45 @@ class Assembly(object):
            self.source is None:
             print('ERROR: Assembly is not complete.')
             return False
-        else:
-            if False in [r<=self.pitch/2 for pin in self.pins.values() for r in pin._radii]:
-                print('ERROR: in a Pin() a radius is greater than the pitch')
+
+        if False in [r<=self.pitch/2 for pin in self.pins.values() for r in pin._radii]:
+            print('ERROR: in a Pin() a radius is greater than the pitch')
+            return False
+
+        if [] in [pin._radii for pin in self.pins.values()]:
+            print('Warning: a pin has no regions, considered as coolant channel')
+
+        if False in [self.fuelmap[i][j] in self.pins for i in range(self.N) for j in range(self.M)]:
+            print('ERROR: Assembly().fuelmap contains pin not included in Assembly.Pins()')
+            return False
+
+        if self.pool is None:
+            print('Warning: no pool in the problem, the surrounding of the Assembly is filled with coolant material')
+            self._surrounding=self._coolant
+            return True
+
+        if self.surrounding is None:
+            print('ERROR: Surrounding material has to be defined if pool is defined')
+            return False
+
+        #Check that the pool is around the fuel assembly
+        pooldummy=Rectangle(Point(self.N*self.pitch/2,self.M*self.pitch/2),
+                Point(self.N*self.pitch/2,-self.M*self.pitch/2),
+                Point(-self.N*self.pitch/2,-self.M*self.pitch/2),
+                Point(-self.N*self.pitch/2,self.M*self.pitch/2))
+        for corner in [self.pool.p1,self.pool.p2,self.pool.p3,self.pool.p4]:
+            if pooldummy.encloses_point(corner): #TODO use corners
+                print('ERROR: Pool is inside fuel')
                 return False
 
-            if [] in [pin._radii for pin in self.pins.values()]:
-                print('Warning: a pin has no regions, considered as coolant channel')
+        if len(pooldummy.intersection(self.pool.p1p2))>1 or \
+              len(pooldummy.intersection(self.pool.p2p3))>1 or \
+              len(pooldummy.intersection(self.pool.p3p4))>1 or \
+              len(pooldummy.intersection(self.pool.p4p1))>1:
+            print('ERROR: Assembly does not fit in pool')
+            return False
 
-            if False in [self.fuelmap[i][j] in self.pins for i in range(self.N) for j in range(self.M)]:
-                print('ERROR: Assembly().fuelmap contains pin not included in Assembly.Pins()')
-                return False
-
-            if self.pool is None:
-                print('Warning: no pool in the problem, the surrounding of the Assembly is filled with coolant material')
-                self._surrounding=self._coolant
-                return True
-            else:
-                if self.surrounding is None:
-                    print('ERROR: Surrounding material has to be defined if pool is defined')
-                    return False
-                else: #Check that the pool is around the fuel assembly
-                    pooldummy=Rectangle(Point(self.N*self.pitch/2,self.M*self.pitch/2),
-                            Point(self.N*self.pitch/2,-self.M*self.pitch/2),
-                            Point(-self.N*self.pitch/2,-self.M*self.pitch/2),
-                            Point(-self.N*self.pitch/2,self.M*self.pitch/2))
-                    for corner in [self.pool.p1,self.pool.p2,self.pool.p3,self.pool.p4]:
-                        if pooldummy.encloses_point(corner): #TODO use corners
-                            print('ERROR: Pool is inside fuel')
-                            return False
-                    if len(pooldummy.intersection(self.pool.p1p2))>1 or \
-                          len(pooldummy.intersection(self.pool.p2p3))>1 or \
-                          len(pooldummy.intersection(self.pool.p3p4))>1 or \
-                          len(pooldummy.intersection(self.pool.p4p1))>1:
-                        print('ERROR: Assembly does not fit in pool')
-                        return False
-                    else:
-                        return True
+        return True
 
 class Detector(object):
     """A class used to represent a Detector.
@@ -822,13 +824,13 @@ class Collimator(object):
       color of the collimator in case of plotting the geometry.
     """
 
-    idName = 'collID'
+    _idName = 'collID'
 
     def __init__(self, *args, **kwargs):
         self._front=None
         self._back=None
         self._color=None
-        self._id = getID(self.idName, args, kwargs)
+        self._id = getID(self._idName, args, kwargs)
 
     def __repr__(self):
         return "Collimator()"
@@ -861,15 +863,15 @@ class Collimator(object):
         >>> c1.set_front(Segment(Point(0.5,-1),Point(0.5,1)))
         ValueError('Collimator back and front should not intersect')
         """
-        if isinstance(front,Segment):
-            if self._back is None:
-                self._front=front
-            elif len(self._back.intersection(front))>0:
-                return ValueError('Collimator back and front should not intersect')
-            else:
-                self._front=front
-        else:
+        if not isinstance(front,Segment):
             raise TypeError('Collimator front has to be a Segment object')
+
+        if self._back is None:
+            self._front=front
+        elif len(self._back.intersection(front))>0:
+            raise ValueError('Collimator back and front should not intersect')
+        else:
+            self._front=front
 
     def set_back(self,back=None):
         """The function to set the back of the Collimator.
@@ -880,16 +882,15 @@ class Collimator(object):
         back : Segment()
           Opening of the collimator slit
         """
-        if isinstance(back,Segment):
-            if self._front is None:
-                self._back=back
-            elif len(self._front.intersection(back))>0:
-                return ValueError('Collimator back and front should not intersect')
-            else:
-                self._back=back
-
-        else:
+        if not isinstance(back,Segment):
             raise TypeError('Collimator back has to be a Segment object')
+
+        if self._front is None:
+            self._back=back
+        elif len(self._front.intersection(back))>0:
+            raise ValueError('Collimator back and front should not intersect')
+        else:
+            self._back=back
 
     def set_color(self, color=None):
         """The function to set the color of the Collimator in case of plotting.
@@ -899,7 +900,7 @@ class Collimator(object):
         color : str
           color definition of Collimator in hex format.
         """
-        if type(color) is str and is_hex_color(color):
+        if isinstance(color, str) and is_hex_color(color):
             self._color=color
         else:
             raise ValueError(('Color has to be hex str for Material ID="{}"'.format(self._id)))
@@ -1692,7 +1693,6 @@ class Experiment(object):
                     print('ERROR: source material is not in Materials')
                     errors.append(False)
 
-
         if self.detectors is None:
             print('ERROR: no detector is defined.')
             errors.append(False)
@@ -1714,6 +1714,7 @@ class Experiment(object):
             if self.absorbers is not None and False in [absorber.accommat in self.materials for absorber in self.absorbers.values()]:
                 print('ERROR: Absorber accommodating material is missing from materials')
                 errors.append(False)
+
         if self._elines is None:
             print('Warning: elines missing; only distance travelled in various materials will be computed')
         else:
@@ -1724,11 +1725,11 @@ class Experiment(object):
                 print('ERROR: Path for attenuation file missing')
                 errors.append(False)
 
-        if len(errors)==0:
-            return True
-        else:
+        if len(errors)!=0:
             print('%d errors encountered.'%(len(errors)))
             return False
+
+        return True
 
     def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4):
         """Function to plot the geometry of an Experiment() object.
