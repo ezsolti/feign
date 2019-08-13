@@ -30,17 +30,15 @@ Passive gamma spectroscopy provides a robust and relatively simple method to ana
 
 # feign
 
-``feign`` is a Python package which implements a 2D point-kernel method to estimate the uncollided point-detector gamma flux around a rectangular spent fuel assembly. The user defines the experimental setup: materials, pin types (consisting of nested annular material regions), assembly lattice, detector locations and optionally collimators and additional absorber elements. Then, the program iterates through each lattice position containing source material and calculates the distance traveled in various materials towards the detector point by a gamma-ray emitted from the given position. A traveled distance map can be seen in \ref{fig:distance} for a 17x17 PWR assembly measured at the passive gamma spectroscopy station of the Swedish Central Interim Storage Facility for Spent Nuclear Fuel (Clab) as described by [@Vaccaro2016]. Based on the traveled distance maps and user-provided mass attenuation coefficient data, the program evaluates the probability (or point-flux per source particle)
+``feign`` is a Python package which implements a 2D point-kernel method to estimate the uncollided point-detector gamma flux around a rectangular spent fuel assembly. The user defines the experimental setup: materials, pin types (consisting of nested annular material regions), assembly lattice, detector locations and optionally collimators and additional absorber elements. Then, the program iterates through each lattice position containing source material and calculates the distance traveled in various materials towards the detector point by a gamma-ray emitted from the given lattice position. Based on the user input, the actual source location is either the center of the pin or a randomly selected location (then the user sets the number of randomly selected locations per pin, in order to estimate the standard deviation of the traveled distances). A traveled distance map can be seen in Fig. \ref{fig:distance} for a 17x17 PWR assembly measured at the passive gamma spectroscopy station of the Swedish Central Interim Storage Facility for Spent Nuclear Fuel (Clab) as described by [@Vaccaro2016]. The detector point is facing the upper right corner. Based on the traveled distance maps and user-provided mass attenuation coefficient data, the program evaluates the probability (or point-flux per source particle)
 
 $$\frac{1}{4\pi R_{i}^2}\prod\limits_m e^{-\mu_m(E) d_{i,m}}$$
 
-for each energy _E_ requested by the user that a gamma-ray emitted from position _i_ hits the detector without collision. Where $$R_i$$ is the distance between the position and the detector, $$\mu_m$$ is the total attenuation coefficient of material _m_ and $$d_{i,m}$$ is the distance traveled by a gamma-ray emitted from position _i_ through material _m_. A contribution map can be seen in \ref{fig:contribution} for the same 17x17 assembly. When summing up the contributions made by each pin for each energy, one gets the geometric efficiency of the system, as shown in \ref{fig:geomeff}.
+for each energy _E_ requested by the user that a gamma-ray emitted from position _i_ hits the detector without collision. Where $$R_i$$ is the distance between the source position and the detector, $$\mu_m$$ is the total attenuation coefficient of material _m_ and $$d_{i,m}$$ is the distance traveled by a gamma-ray emitted from position _i_ through material _m_. A contribution map can be seen in Fig. \ref{fig:contribution} for the same 17x17 assembly. When summing up the contributions made by each pin for each energy, one gets the geometric efficiency of the system. Fig. \ref{fig:geomeff} illustrates a case when the source locations are the center of the pins and a case when ten source locations per pin were randomly selected. One can see that the pin center approximation might overestimate the traveled distances, thus underestimate the geometric efficiency. 
 
 The program includes several approximations, which limits its area of applications. These approximations and the rationale behind them are the following:
 
 - The program is limited to 2D geometries. In case, collimators with a narrow horizontal slit are placed in front of the detector points, the axial dependence is negligible.
-
-- The gamma-ray source locations are considered to be at the middle of the pins. In case, the distance between the detector and the assembly is several order of magnitude larger than the pin diameter, this becomes a reasonable approximation for rectangular lattices.
 
 - The build-up factor is neglected. If the detector has a high energy resolution, then it becomes a valid approximation to consider that for a given gamma-peak only photons directly hitting the detector can contribute, and photons participating in scattering reactions will contribute only to the background, which ideally should be removed during the analysis of the spectrum. 
 
@@ -50,7 +48,7 @@ Thus, for typical spent fuel passive gamma spectroscopy setups ``feign`` will pr
 
 ![An example of contributions made by a pin position to a detector for a 17x17 PWR assembly measured at Clab. Each pixel represents the probability that a gamma-ray emitted from that position directly hits the detector.\label{fig:contribution}](article_contribution.png)
 
-![An example of geometric efficiency calculated for a 17x17 PWR assembly measured at Clab.\label{fig:geomeff}](article_geomeff.png)
+![An example of geometric efficiency calculated for a 17x17 PWR assembly measured at Clab.\label{fig:geomeff}](article_geomeffave.png)
 
 
 # Acknowledgement
