@@ -494,7 +494,7 @@ class Assembly(object):
         >>> assembly.pins
         {'1': Pin(pinID=1)}
         >>> assembly.remove_pin(guide)
-        You can remove only existing Pin()
+        ID 2 is not in dict yet
 
         Raises
         ------
