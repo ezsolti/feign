@@ -310,7 +310,7 @@ def delIDsFromDict(objectDict, *argv):
     for arg in argv:
         if objectDict is None:
             raise TypeError('No objects added yet.')
-        elif arg._id in objectDict:
+        elif arg._id not in objectDict:
             print('ID {} is not in dict yet'.format(arg._id))
         else:
             del objectDict[arg._id]
@@ -1247,7 +1247,7 @@ class Experiment(object):
         >>> experiment.materials
         {'1': Material(matID=1)}
         >>> experiment.remove_material(zr)
-        You can remove only existing Material()
+        ID 2 is not in dict yet
 
         Raises
         ------
@@ -1346,7 +1346,7 @@ class Experiment(object):
         >>> experiment.absorbers
         {'leadsheet': Absorber(absID=leadsheet)}
         >>> experiment.remove_absorber(alusheet)
-        You can remove only existing Absorber()
+        ID alusheet is not in dict yet
 
         Raises
         ------
@@ -1445,7 +1445,7 @@ class Experiment(object):
         >>> experiment.detectors
         {'F5': Detector(detID=F5)}
         >>> experiment.remove_detector(F15)
-        You can remove only existing Detector()
+        ID F15 is not in dict yet
 
         Raises
         ------
