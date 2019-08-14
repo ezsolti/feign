@@ -1000,6 +1000,28 @@ class Experiment(object):
     output : str, optional
       filename (and path) where to print the geometric efficiency
 
+    Note
+    ----
+    While computing the travelled distance, if the ray does not pass through the
+    collimator, np.Inf is set in the given traveled distance map for the given position. This is useful, 
+    because the the probability of travelling infinite distance is zero, thus in the related
+    contribution map, at the same location 0.0 will be found.
+    If the geometry is so that rays emitted from any location from a pin will not pass through
+    the collimator, than the mean traveled map (:attr:`Experiment.dTmap`) will have np.Inf at 
+    that location (which is correct since the mean of many infinities is infinity) and the 
+    the standard deviation will be 0.0 (which is again correct).
+    However, in cases when rays emitted from some location in a pin pass through the collimator, whereas
+    from some other locations in a pin they do not pass through, the mean traveled distance 
+    (:attr:`Experiment.dTmap`) and the standard deviation of the travelled distance (:attr:`Experiment.dTmapErr`)
+    become meaningless at such pin positions. (This could be a situation when the collimator slit is
+    narrower than the size of the pins). The reason is that the mean of something and infinity will become
+    infinity as well. Also, for the standard deviation calculation the np.Inf values are set to 0.0,
+    otherwise the map location would be filled with NaN. 
+    For these cases one might analyse the list of travelled distances (:attr:`Experiment.dTmap`) and
+    the list of source locations (:attr:`Experiment.sourcePoints`).
+    Nevertheless, the contribution maps and the geometric efficiency is correctly calculated even in
+    these situations!
+
     Examples
     --------
     Examples of plotting attributes can be found at https://github.com/ezsolti/feign/blob/master/examples/ex1_2x2fuel.ipynb
@@ -1870,6 +1892,10 @@ class Experiment(object):
             for mat in dTmapsRe[det]:
                 dTmapToAve=np.array([np.ravel(dT) for dT in dTmapsRe[det][mat]])
                 dTmap[det][mat]=np.mean(dTmapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
+                #dTmap elements may be np.Inf if the ray did not pass through the collimator
+                #this is useful to get 0 in attenuation() for those locations
+                #and it makes std calculation impossible, thus we set it to 0. see not in docstring!
+                dTmapToAve=np.where(dTmapToAve==np.Inf,0.0,dTmapToAve) 
                 dTmapErr[det][mat]=np.std(dTmapToAve,axis=0).reshape((self.assembly.N,self.assembly.M))
         self._dTmap=dTmap
         self._dTmapErr=dTmapErr
