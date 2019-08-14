@@ -50,7 +50,7 @@ API documentation, examples and theoretical background is covered at [ezsolti.gi
 Contributing, bugs, suggestions
 -------------------------------
 
-Any reported bug or suggestion is appreciated, please [open a new issue](https://github.com/ezsolti/feign/issues/new). If you would like to contribute, do not hesitate so, just include tests.
+Any reported bug or suggestion is appreciated, please [open a new issue](https://github.com/ezsolti/feign/issues/new). If you would like to contribute, do not hesitate to do so, just include tests.
 
 Tests
 -----
