@@ -3,7 +3,6 @@
 """
 test Experiment checkComplete()
 
-@author: zsolt
 zs. elter 2019
 
 Note, at the beginning basically everything needs to be created, and in the test
