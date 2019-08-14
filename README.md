@@ -1,19 +1,68 @@
 # FEIGN: a package to estimate the geometric efficiency of  gamma spectroscopy setups in spent nuclear fuel measurements
 
-This package implements a series of ray tracing methods to estimate the geometric efficiency of rectangular fuel assemblies.
+``feign`` is a python package for estimating the geometric efficiency in passive gamma spectroscopy measurments of spent nuclear fuel assemblies. It implements a 2D point-kernel method without build-up factors (ie. an "uncollided F5 tally" for MCNP users). The name feign implies that the program pretends to be a transport code, however it is rather a ray-tracing code. 
+
+It is intended for nuclear safeguards specialists and nuclear engineers who want to get a quick estimate on the geometric efficiency in their passive gamma setup. It might be also useful to people working with passive gamma emission tomography of spent fuel.
+
+The ``feign`` API allows the user to define the geometry of a rectangular fuel assembly, which is built of pins (nested annular material regions). The user also defines the composition of materials present in the simulation, the detector points where the efficiency needs to be evaluated, and optionally collimators and absorber elements. 
+
+As a package, ``feign`` provides
+
+- basic 2D geometry classes (Point, Segment, Circle, Rectangle)
+- classes to describe materials, fuel pins, rectangular fuel assemblies, detectors and absorbers
+- methods to perform the ray-tracing and estimating the geometric efficiency.
 
 Installation
 ------------
 
-Hopefully this package will be available in PyPI.
+``feign`` can be installed by downloading the zipball from github.
+
+```bash
+   pip install https://github.com/ezsolti/feign/zipball/master
+```
+
+Installation was tested on Linux.
+
+Dependencies
+
+- NumPy
+- Matplotlib
+
+Data 
+
+Besides the installation you will need mass attenuation coefficients. You can download some files for testing from the [data folder](https://github.com/ezsolti/feign/tree/master/data). Further information on how to obtain your own data is an the [documentation site](https://ezsolti.github.io/feign/installation.html).
+
+Getting started
+---------------
+
+The basic functionality and the theoretical background is summarized at the [documentation site](https://ezsolti.github.io/feign/quickstart.html)
+
+Examples
+--------
+
+Several examples can be found in the [examples folder](https://github.com/ezsolti/feign/tree/master/examples) or at the [documentation site](https://ezsolti.github.io/feign/examples.html)
 
 Docs
 ----
 
-The full documentation will be written.
+API documentation, examples and theoretical background is covered at [ezsolti.github.io/feign](https://ezsolti.github.io/feign/examples.html)
 
-Contributing
-------------
+Contributing, bugs, suggestions
+-------------------------------
 
-When contributing to this repository, please first discuss the intended changes with me.
+Any reported bug or suggestion is appreciated, please [open a new issue](https://github.com/ezsolti/feign/issues/new). If you would like to contribute, do not hesitate so, just include tests.
+
+Tests
+-----
+
+Several tests can be found in the [tests folder](https://github.com/ezsolti/feign/tree/master/tests), run them with
+
+```bash
+python3 -m unittest discover tests/
+```
+
+Licence
+-------
+
+This work is licensed under the MIT License (see [LICENSE](https://github.com/ezsolti/feign/blob/master/LICENSE))
 
