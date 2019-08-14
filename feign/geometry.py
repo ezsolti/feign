@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-FEIGNgeom 
+feign geometry module
+
+zs. elter 2019
 """
 import math
 import numpy as np
@@ -12,9 +14,9 @@ class Point(object):
 
     Parameters
     ----------
-    X : float
+    x : float
         x coordinate of Point in cm
-    Y : float
+    y : float
         y coordinate of Point in cm
 
     Attributes
@@ -25,9 +27,9 @@ class Point(object):
         y coordinate of Point in cm
     """
 
-    def __init__(self, X, Y):
-        self.x = X
-        self.y = Y
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
     def __repr__(self):
         return "Point(%.3f, %.3f)" % (self.x, self.y)
@@ -170,9 +172,9 @@ class Segment(object):
 
     Parameters
     ----------
-    P : Point()
+    p : Point()
         first end point of Segment
-    Q : Point()
+    q : Point()
         second end point of Segment
 
     Attributes
@@ -189,18 +191,18 @@ class Segment(object):
         list of p and q
 
     """
-    def __init__(self,P,Q):
-        self.p=P
-        self.q=Q
-        self._points=[P,Q]
-        if abs(Q.x-P.x)<eps:
+    def __init__(self,p,q):
+        self.p=p
+        self.q=q
+        self._points=[p,q]
+        if abs(q.x-p.x)<eps:
             self._slope=np.Inf
-            self._intercept=Q.x
+            self._intercept=q.x
             #in this case the x coordinate is returned as the intercept!
             #the intersection functions will make use of this
         else:
-            self._slope=(Q.y-P.y)/(Q.x-P.x)
-            self._intercept=P.y-self._slope*P.x
+            self._slope=(q.y-p.y)/(q.x-p.x)
+            self._intercept=p.y-self._slope*p.x
 
     def __repr__(self):
         return "Segment(Point(%.3f, %.3f),Point(%.3f, %.3f))" % (self.p.x, self.p.y,self.q.x, self.q.y)
@@ -282,9 +284,9 @@ class Circle(object):
 
     Parameters
     ----------
-    C : Point()
+    c : Point()
         center of Circle
-    R : float
+    r : float
         radius of Circle
 
     Attributes
@@ -295,9 +297,9 @@ class Circle(object):
         radius of Circle
     """
 
-    def __init__(self, C, R):
-        self.c = C
-        self.r = R
+    def __init__(self, c, r):
+        self.c = c
+        self.r = abs(r)
 
     def __repr__(self):
         return "Circle(C=(%.3f, %.3f),R=%.3f)" % (self.c.x, self.c.y,self.r)
@@ -412,13 +414,13 @@ class Rectangle(object):
 
     Parameters
     ----------
-    P1 : Point()
+    p1 : Point()
         first corner
-    P2 : Point()
+    p2 : Point()
         second corner
-    P3 : Point()
+    p3 : Point()
         third corner
-    P4 : Point()
+    p4 : Point()
         fourth corner
 
     Attributes
@@ -449,19 +451,19 @@ class Rectangle(object):
     ValueError
         if Corners are not defined in clockwise or counter-clockwise order.
     """
-    def __init__(self,P1,P2,P3,P4):
-        self.p1=P1
-        self.p2=P2
-        self.p3=P3
-        self.p4=P4
-        self._corners=[P1,P2,P3,P4]
-        if Segment(P1,P3).intersection(Segment(P2,P4)) == []:
+    def __init__(self,p1,p2,p3,p4):
+        self.p1=p1
+        self.p2=p2
+        self.p3=p3
+        self.p4=p4
+        self._corners=[p1,p2,p3,p4]
+        if Segment(p1,p3).intersection(Segment(p2,p4)) == []:
             raise ValueError('Corners defined in wrong order')
         else:
-            self._p1p2=Segment(P1,P2)
-            self._p2p3=Segment(P2,P3)
-            self._p3p4=Segment(P3,P4)
-            self._p4p1=Segment(P4,P1)
+            self._p1p2=Segment(p1,p2)
+            self._p2p3=Segment(p2,p3)
+            self._p3p4=Segment(p3,p4)
+            self._p4p1=Segment(p4,p1)
             self._sides=[self._p1p2,self._p2p3,self._p3p4,self._p4p1]
 
     def __repr__(self):
