@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jul 22 11:12:45 2019
+feign blocks module
 
-@author: zsolt
+zs. elter, a. cserkaszky 2019
 """
 
 import os
