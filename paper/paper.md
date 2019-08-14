@@ -48,7 +48,7 @@ Thus, for typical spent fuel passive gamma spectroscopy setups ``feign`` will pr
 
 ![An example of contributions made by a pin position to a detector for a 17x17 PWR assembly measured at Clab. Each pixel represents the probability that a gamma-ray emitted from that position directly hits the detector.\label{fig:contribution}](article_contribution.png)
 
-![An example of geometric efficiency calculated for a 17x17 PWR assembly measured at Clab.\label{fig:geomeff}](article_geomeffave.png)
+![An example of geometric efficiency calculated for a 17x17 PWR assembly measured at Clab. Errorbar belongs to three standard deviations.\label{fig:geomeff}](article_geomeffave.png)
 
 
 # Acknowledgement
