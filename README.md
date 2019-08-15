@@ -23,6 +23,12 @@ Installation
 
 Installation was tested on Linux.
 
+Uninstall it with the command
+
+```bash
+   pip uninstall feign
+```
+
 Dependencies
 
 - NumPy
@@ -30,7 +36,14 @@ Dependencies
 
 Data 
 
-Besides the installation you will need mass attenuation coefficients. You can download some files for testing from the [data folder](https://github.com/ezsolti/feign/tree/master/data). Further information on how to obtain your own data is an the [documentation site](https://ezsolti.github.io/feign/installation.html).
+Besides the installation you will need mass attenuation coefficients. You can download some files for testing from the [data folder](https://github.com/ezsolti/feign/tree/master/data). Further information on how to obtain your own data is an the [documentation site](https://ezsolti.github.io/feign/installation.html). When you have gathered your own datafiles, you can link them to Material() objects with the following method:
+
+```python
+   uo2=Material('1')
+   uo2.set_path(('/yourpath/UO2.dat',1))
+```
+
+`set_path` expects a tuple, the first element is the path to the data file, and the second element clarifies which column should be used from the file (since you might have several columns, for example attenuaton with or without coherent scattering).
 
 Getting started
 ---------------
