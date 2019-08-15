@@ -21,7 +21,7 @@ Installation
    pip install https://github.com/ezsolti/feign/zipball/master
 ```
 
-Installation was tested on Linux.
+Installation was successfully tested on Linux and Windows.
 
 Uninstall it with the command
 
