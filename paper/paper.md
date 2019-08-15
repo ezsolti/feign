@@ -30,6 +30,7 @@ The operator declarations of spent nuclear fuel assemblies are routinely verifie
 
 Passive gamma spectroscopy provides a robust and relatively simple method to analyze spent fuel since the characteristics of spent nuclear fuel strongly affect the gamma radiation emitted from the fuel [@Janssonthesis]. Lately, passive gamma tomography has also become a possible method to characterize and analyse properties of spent nuclear fuels [@pget]. In both cases, gamma radiation is measured around the fuel assembly from a distance using one or more collimated detectors with spectroscopic capabilities. The detector efficiency, the ratio between number of detected particles and number of particles emitted by the source, of such systems is of great interest. The detector efficiency is the product of the geometric efficiency (probability that emitted particles reach the detector region) and the intrinsic efficiency of the detector (probability that the particles are detected). The detector efficiency is usually estimated with Monte Carlo simulations, most often by using the MCNP particle transport code [@mcnp]. Nevertheless, analog Monte Carlo simulations of spent fuel passive gamma measurements are extremely time consuming. This depends mainly on the facts that the source (the spent fuel assembly) is both highly radioactive and highly attenuating (made of high-density uranium dioxide), and that the strong radiation field around the source often makes it difficult to place it near the detectors. In addition, it is not uncommon to use collimators with narrow slits around the detectors, something that makes the simulation of the detection process even more time consuming. Thus, only a tiny fraction of source particles reach the detector. As a solution, the simulation is often split into two parts: first, a point-detector (F5 in the MCNP jargon) tally is used to estimate the energy-resolved gamma photon flux at the location of the detector, and then a subsequent pulse-height tally computation (F8 in the MCNP jargon) is done to estimate the detector response. The F5 tally provides a semi-deterministic solution of the transport problem. The history of the gamma-ray is tracked with Monte Carlo, however at each interaction of the particle, the contribution to a point-detector is calculated analytically. A great advantage of this method is that both the direct attenuation of gamma radiation and the build-up factor is included. However, this methodology still requires excessive amount of computing time when the efficiency curves of a large number of assembly configurations are needed, for example when training machine learning algorithms for classification analysis of intact and manipulated fuel assemblies based on the measured gamma spectrum [@elterMVA]. Furthermore, when prototyping with such algorithms, the accuracy of a Monte Carlo code may not be needed. Nevertheless, in collimated passive gamma spectroscopy setups, one could argue, that only the uncollided gamma-rays contribute significantly to the gamma peaks in the spectrum (if the background is removed), thus computing the uncollided F5 tally would be satisfactory. However, computing the uncollided point-detector flux does not require a transport code such as MCNP, the task can be solved with a program that feigns to be a transport code such as the one developed here.
 
+![Example of distance traveled in uranium-dioxide and water for a 17x17 PWR assembly being measured at Clab. Each pixel represents the distance traveled in a certain material by a gamma-ray emitted from that position to the detector.\label{fig:distance}](article_distancetravelled.png)
 
 # feign
 
@@ -41,6 +42,10 @@ $$P_i(E) =\frac{1}{4\pi R_{i}^2}\prod\limits_m e^{-\mu_m(E) d_{i,m}}$$
 
 for each energy $E$ requested by the user that a gamma-ray emitted from position $i$ hits the detector without collision. $R_i$ is the distance between the source position and the detector, $\mu_m$ is the total attenuation coefficient of material $m$ and $d_{i,m}$ is the distance traveled by a gamma-ray emitted from position $i$ through material $m$. A contribution map can be seen in Fig. \ref{fig:contribution} for the same 17x17 assembly. When summing up the contributions made by each pin for each energy, one gets the geometric efficiency curve of the system. Fig. \ref{fig:geomeff} illustrates one case when the source locations are the center of the pins and another case when ten source locations were randomly selected in each pin. One can see that the pin center approximation has a lower efficiency as compared to the case with randomly selected source locations inside the pin. This is due to that the pin center case overestimates the traveled distances (thus underestimate the geometric efficiency). 
 
+![Example of contributions made by a pin position to a detector facing the corner of a 17x17 PWR assembly at Clab. Each pixel represents the probability that a gamma-ray emitted from that position directly hits the detector.\label{fig:contribution}](article_contribution.png)
+
+![Example geometric efficiency curve calculated for a 17x17 PWR assembly being measured at Clab. Errorbar represents three sigmas.\label{fig:geomeff}](article_geomeffave.png)
+
 The program includes several approximations, which limit its area of applications. These approximations and the rationale behind them are the following:
 
 - The program is limited to 2D geometries. For long collimators with a narrow horizontal slit which are placed in front of the detector points, the axial dependence is negligible.
@@ -49,18 +54,9 @@ The program includes several approximations, which limit its area of application
 
 Thus, for typical spent fuel passive gamma spectroscopy setups, ``feign`` will produce a reliable estimate of the geometric efficiency curve. Nevertheless, even where these approximations are not valid, the package can be used as a fast way to estimate the uncollided point flux in order to aid setting up variance reduction methods in Monte Carlo calculations (eg. importance values or weight windows).
 
-![Example of distance traveled in uranium-dioxide and water for a 17x17 PWR assembly being measured at Clab. Each pixel represents the distance traveled in a certain material by a gamma-ray emitted from that position to the detector.\label{fig:distance}](article_distancetravelled.png)
-
-![Example of contributions made by a pin position to a detector facing the corner of a 17x17 PWR assembly at Clab. Each pixel represents the probability that a gamma-ray emitted from that position directly hits the detector.\label{fig:contribution}](article_contribution.png)
-
-![Example geometric efficiency curve calculated for a 17x17 PWR assembly being measured at Clab. Errorbar represents three sigmas.\label{fig:geomeff}](article_geomeffave.png)
-
-
 # Acknowledgement
 
 The package was developed within a project funded by the Swedish Radiation Safety Authority (SSM), grant number SSM2015-4125. Special thanks to Lajos Nagy for the useful advices on the structure of the geometry module.
-
-
 
 # References
 
