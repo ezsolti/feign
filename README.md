@@ -1,6 +1,6 @@
 # FEIGN: a package to estimate the geometric efficiency of  gamma spectroscopy setups in spent nuclear fuel measurements
 
-``feign`` is a python package for estimating the geometric efficiency in passive gamma spectroscopy measurments of spent nuclear fuel assemblies. It implements a 2D point-kernel method without build-up factors (ie. an "uncollided F5 tally" as known by MCNP users). The name feign implies that the program pretends to be a transport code, however it is rather a ray-tracing code. 
+``feign`` is a python package for estimating the geometric efficiency in passive gamma spectroscopy measurements of spent nuclear fuel assemblies. It implements a 2D point-kernel method without build-up factors (ie. an "uncollided F5 tally" as known by MCNP users). The name feign implies that the program pretends to be a transport code, however it is rather a ray-tracing code. 
 
 It is intended for nuclear safeguards specialists and nuclear engineers who want to get a quick estimate on the geometric efficiency in their passive gamma setup. It might be also useful to people working with passive gamma emission tomography of spent fuel.
 
