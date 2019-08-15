@@ -121,12 +121,12 @@ class Material(object):
 
     Parameters
     ----------
-    matID : str
+    *args : str
       ID of the material
 
     Attributes
     ----------
-    matID : str
+    _id : str
         ID of the material
     density : float
         density of material in (g/cm3)
@@ -209,17 +209,17 @@ class Pin(object):
 
     Parameters
     ----------
-    pinID : str
+    *args : str
         ID of the pin
 
     Attributes
     ----------
-    pinID : str
+    _id : str
         ID of the pin
     regions : list of tuples
         (Material, radius) pairs to describe coaxial regions within pin, radius in cm.
     materials : list of str
-        list of :attr:`Material.matID` identifiers within the pin
+        list of :attr:`Material._id` identifiers within the pin
     radii : list of floats
         list of radii of regions within the pin, radii in cm
     """
@@ -338,14 +338,14 @@ class Assembly(object):
     fuelmap: 2D array
         fuelmap to describe which pins are filled in the positions
     coolant : str
-        matID of the coolant (ie. materal filled between pins)
+        :attr:`Material._id` of the coolant (ie. materal filled between pins)
     pool : Rectangle() (optional)
         pool in which the assembly is placed. Within the pool coolant material is
         filled, outside the pool surrounding material is filled.
     surrounding : str (mandatory if pool is present)
-        matID of the surrounding material (ie. material filled around pool)
+        :attr:`Material._id` of the surrounding material (ie. material filled around pool)
     source : list of str
-        :attr:`Material.matID` identifiers of material emitting gamma particles
+        :attr:`Material._id` identifiers of material emitting gamma particles
     """
     def __init__(self,N,M):
         try:
@@ -360,7 +360,7 @@ class Assembly(object):
         self._fuelmap=None
         self._coolant=None
         self._surrounding=None
-        self._source=None #TODO what if more materials emit from same pin?
+        self._source=None #TODO: what if more materials emit from same pin?
         self._pool=None
 
     def __repr__(self):
@@ -638,8 +638,8 @@ class Assembly(object):
                 Point(self.N*self.pitch/2,-self.M*self.pitch/2),
                 Point(-self.N*self.pitch/2,-self.M*self.pitch/2),
                 Point(-self.N*self.pitch/2,self.M*self.pitch/2))
-        for corner in [self.pool.p1,self.pool.p2,self.pool.p3,self.pool.p4]:
-            if pooldummy.encloses_point(corner): #TODO use corners
+        for corner in self.pool.corners:
+            if pooldummy.encloses_point(corner):
                 print('ERROR: Pool is inside fuel')
                 return False
 
@@ -657,12 +657,12 @@ class Detector(object):
 
     Parameters
     ----------
-    detID : str
+    *args : str
         ID of the detector
 
     Attributes
     ----------
-    detID : str
+    _id : str
         ID of the detector
     location : Point()
         location of the detector
@@ -721,19 +721,19 @@ class Absorber(object):
 
     Parameters
     ----------
-    absID : str
+    *args : str
         ID of the absorber
 
     Attributes
     ----------
-    absID : str
+    _id : str
         ID of the absorber
     form : Rectangle() or Circle()
         the shape of the absorber
     material : str
-        matID of the Material the absorber is made of
+        :attr:`Material._id` of the Material the absorber is made of
     accommat : str
-        matID of the Material the absorber is surrounded with (Note: the program
+        :attr:`Material._id` of the Material the absorber is surrounded with (Note: the program
         has no capabilities to decide which material is around the absorber, thus
         the user has to set this)
     """
@@ -809,12 +809,12 @@ class Collimator(object):
 
     Parameters
     ----------
-    collID : str (optional)
+    *args : str
       ID of the collimator
 
     Attributes
     ----------
-    collID : str (optional)
+    _id : str (optional)
       ID of the collimator
     front : Segment()
       First ppening of the collimator slit
@@ -929,7 +929,9 @@ class Experiment(object):
         The total attenuation coefficients for all the energies in elines, and for
         each material in the problem.
     sourcePoints : list
-        List of pin-wise source point locations for each random sample.
+        List of pin-wise source point locations for each random sample. Each list element is a 
+        dictionary, where the keys are :attr:`Detector._id` identifiers and the values are 2D numpy
+        arrays storing Point() objects
     dTmap : dict of dictionaries of 2D numpy arrays
         The average distance travelled by a gamma-ray from a lattice position to a detector
         given for each material in the problem. Outer keys are :attr:`Detector._id` identifiers,
@@ -946,16 +948,16 @@ class Experiment(object):
     contributionMap : dict
         Dictionary to store the rod-wise contributions averaged over random samples
         to each detector at each energy.
-        Outer keys are detector :attr:`Detector.detID` identifiers.
+        Outer keys are detector :attr:`Detector._id` identifiers.
         Inner keys are energy lines (as given in :meth:`Experiment.set_elines()`)
-        contributionMap[detID][eline] is an NxM shaped numpy array, where
+        :code:`contributionMap[Detector._id][eline]` is an NxM shaped numpy array, where
         N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
     contributionMapErr : dict
         Dictionary to store the standard deviation of rod-wise contributions averaged over
         random samples to each detector at each energy.
-        Outer keys are detector :attr:`Detector.detID` identifiers.
+        Outer keys are detector :attr:`Detector._id` identifiers.
         Inner keys are energy lines (as given in :meth:`Experiment.set_elines()`)
-        contributionMapErr[detID][eline] is an NxM shaped numpy array, where
+        :code:`contributionMapErr[Detector._id][eline]` is an NxM shaped numpy array, where
         N is :attr:`Assembly.N` and M is :attr:`Assembly.M`
     contributionMaps : list
         All random samples of contribution maps to each detector at each energy.
@@ -978,12 +980,12 @@ class Experiment(object):
         Dictionary to store the geometric efficiency at each detector location averaged over
         each random sample.
         Keys are detector :attr:`Detector._id` identifiers.
-        geomEff[detID] is E long numpy array, where E is the length of :attr:`Experiment.elines`
+        :code:`geomEff[Detector._id]` is E long numpy array, where E is the length of :attr:`Experiment.elines`
     geomEffErr : dict
         Dictionary to store the standard deviation of the geometric efficiency 
         at each detector location averaged over each random sample.
         Keys are detector :attr:`Detector._id` identifiers.
-        geomEff[detID] is E long numpy array, where E is the length of :attr:`Experiment.elines`
+        :code:`geomEff[Detector._id]` is E long numpy array, where E is the length of :attr:`Experiment.elines`
     geomEffs : list
         All random samples of the geometric efficiency at each detector location.
     geomEffAve : numpy.ndarray
@@ -1083,8 +1085,7 @@ class Experiment(object):
 
     @property
     def elines(self):
-        return np.array(self._elines).astype(float) #TODO, i want the strings for later, but for plotting float is better. Is this a correct way to do it?
-                                                    #probably not because I may want the strings in processing as well. but this can be done while processing
+        return np.array(self._elines).astype(float) 
 
     @property
     def sourcePoints(self):
@@ -1523,7 +1524,7 @@ class Experiment(object):
         dict
             Dictionary to store the attenuation coefficients.
             Outer keys are energies as defined in :attr:`elines`,
-            inner keys are :attr:`Material.matID` identifiers.
+            inner keys are :attr:`Material._id` identifiers.
         """
         mu={e: {m: 0 for m in self.materials} for e in self._elines}
 
@@ -1568,13 +1569,11 @@ class Experiment(object):
 
                     dT={key: 0 for key in self.materials} #dict to track distances travelled in each material for a given pin
                     
-                    #TODO get a random number is the source material?!
-                    #if source is the inner most pin randomly center in circle
-                    #else: randomly in that and reject the things within
+                    #TODO: might wanna handle cases when the source is not the innermost circle?
                     if self.randomNum == 1:
                         centerSource=Point(-p*(M-1)+j*2*p,p*(N-1)-i*2*p)
                     else:
-                        length = self.pins[self.assembly.fuelmap[i][j]]._radii[0]*np.sqrt(np.random.uniform(0, 1)) #TODO, if second ring is the source?
+                        length = self.pins[self.assembly.fuelmap[i][j]]._radii[0]*np.sqrt(np.random.uniform(0, 1))
                         angle = np.pi * np.random.uniform(0, 2)
                         xnoise = length * np.cos(angle)
                         ynoise = length * np.sin(angle)
@@ -1847,11 +1846,12 @@ class Experiment(object):
         geomefficiencyAves=[]
         sourcePoints=[]
         for k in range(self.randomNum):
-            print('#%d is being calculated'%(k)) #TODO RUN-ba
+            print('#%d is being calculated'%(k))
             dTmap={}
+            sourcePoint={}
             for name in self.detectors:
                 print("Distance travelled to detector "+name+" is being calculated")
-                dTmap[name],sourcePoint=self.distanceTravelled(self.detectors[name]) 
+                dTmap[name],sourcePoint[name]=self.distanceTravelled(self.detectors[name]) 
             dTmaps.append(dTmap)
             sourcePoints.append(sourcePoint)    
             if self._elines is not None:
@@ -1869,7 +1869,7 @@ class Experiment(object):
                         print('...for gamma energy %s MeV'%(e))
                         mue=self._mu[e]
                         muem={key: mue[key]*self.materials[key].density for key in mue.keys()}
-                        contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name],sourcePoint)
+                        contributionMap[name][e]=self.attenuation(dTmap[name],muem,self.detectors[name],sourcePoint[name])
                         contributionMapAve[e]=contributionMapAve[e]+contributionMap[name][e]/len(self.detectors)
                     geomefficiency[name]=np.array([np.sum(contribution) for contribution in contributionMap[name].values()])/sourceNorm
                     geomefficiencyAve=geomefficiencyAve+geomefficiency[name]/len(self.detectors)
