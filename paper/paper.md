@@ -44,8 +44,6 @@ that a gamma-ray emitted from position $i$ with energy $E$ hits the detector wit
 
 ![Example of contributions made by a pin position to a detector facing the corner of a 17x17 PWR assembly at Clab. Each pixel represents the relative contribution that a gamma-ray emitted from that position directly hits the detector.\label{fig:contribution}](article_contribution.png)
 
-![Example geometric efficiency curve calculated for a 17x17 PWR assembly being measured at Clab. Errorbar represents three standard deviations.\label{fig:geomeff}](article_geomeffave.png)
-
 The program includes several approximations, which limit its area of applications. These approximations and the rationale behind them are the following:
 
 - The program is limited to 2D geometries. For a long collimator with a narrow horizontal slit which is placed in front of the detector, the axial dependence is negligible.
@@ -53,6 +51,8 @@ The program includes several approximations, which limit its area of application
 - The build-up factor is neglected. If the detector has a high energy-resolution, then it becomes a valid approximation to consider that for a given gamma-peak only photons directly hitting the detector can contribute, and photons participating in scattering reactions will contribute only to the background, which ideally should be removed during the analysis of the spectrum. 
 
 Thus, for typical spent fuel passive gamma spectroscopy setups, ``feign`` will produce a reliable estimate of the geometric efficiency curve. Nevertheless, even where these approximations are not valid, the package can be used as a fast way to estimate the uncollided point flux in order to aid setting up variance reduction methods in Monte Carlo calculations (eg. importance values or weight windows).
+
+![Example geometric efficiency curve calculated for a 17x17 PWR assembly being measured at Clab. Errorbar represents three standard deviations.\label{fig:geomeff}](article_geomeffave.png)
 
 # Acknowledgements
 
