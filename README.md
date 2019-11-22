@@ -58,7 +58,7 @@ Several examples can be found in the [examples folder](https://github.com/ezsolt
 Docs
 ----
 
-API documentation, examples and theoretical background is covered at [ezsolti.github.io/feign](https://ezsolti.github.io/feign/examples.html)
+API documentation, examples and theoretical background is covered at [ezsolti.github.io/feign](https://ezsolti.github.io/feign/)
 
 Contributing, bugs, suggestions
 -------------------------------
