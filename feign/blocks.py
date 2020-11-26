@@ -1757,7 +1757,7 @@ class Experiment(object):
 
         return True
 
-    def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4):
+    def Plot(self,out=None,dpi=600,xl=[-100,100],yl=[-100,100],detectorSize=0.4,show=True):
         """Function to plot the geometry of an Experiment() object.
            The function will randomly set colors to Material() objects for which colors
            were previously not defined.
@@ -1774,6 +1774,8 @@ class Experiment(object):
              y-direction limits of region of the geometry to plot (in cm)
            detectorSize : float (default=400)
              radius of white circle to illustrate the detector points
+           show : bool (default=True)
+             if True then show the plot
         """
         if self.checkComplete() is False:
             raise ValueError('ERROR')
@@ -1824,7 +1826,8 @@ class Experiment(object):
         plt.gca().set_aspect('equal', adjustable='box')
         if out is not None:
             plt.savefig(out,dpi=dpi)
-        plt.show()
+        if show:
+            plt.show()
 
     def Run(self):
         """The function to run an Experiment. It will update the dTmap, the
